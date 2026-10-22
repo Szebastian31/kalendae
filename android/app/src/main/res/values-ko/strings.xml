@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- notification channel names, as shown in Android settings -->
+<resources>
+    <string name="ch_upcoming">다가오는 일정</string>
+    <string name="ch_upcoming_desc">만기 며칠 전의 갱신과 청구서</string>
+    <string name="ch_warn">경고</string>
+    <string name="ch_warn_desc">곧 유료로 바뀌는 체험판과 잔액이 부족해질 계좌</string>
+</resources>

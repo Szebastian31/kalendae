@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- notification channel names, as shown in Android settings -->
+<resources>
+    <string name="ch_upcoming">Nadchádzajúce</string>
+    <string name="ch_upcoming_desc">Obnovenia a účty niekoľko dní pred splatnosťou</string>
+    <string name="ch_warn">Upozornenia</string>
+    <string name="ch_warn_desc">Skúšobné obdobia, ktoré sa čoskoro stanú platenými, a účty, na ktorých môžu dôjsť peniaze</string>
+</resources>

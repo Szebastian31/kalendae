@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- notification channel names, as shown in Android settings -->
+<resources>
+    <string name="ch_upcoming">پیش رو</string>
+    <string name="ch_upcoming_desc">تمدیدها و قبض‌ها چند روز پیش از سررسید</string>
+    <string name="ch_warn">هشدارها</string>
+    <string name="ch_warn_desc">دوره‌های آزمایشی که به‌زودی پولی می‌شوند و حساب‌هایی که ممکن است پولشان کم بیاید</string>
+</resources>

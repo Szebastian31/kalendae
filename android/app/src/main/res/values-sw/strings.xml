@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- notification channel names, as shown in Android settings -->
+<resources>
+    <string name="ch_upcoming">Yanayokuja</string>
+    <string name="ch_upcoming_desc">Usasishaji na bili siku chache kabla ya tarehe yake</string>
+    <string name="ch_warn">Tahadhari</string>
+    <string name="ch_warn_desc">Majaribio yanayokaribia kulipiwa, na akaunti zinazokaribia kuishiwa pesa</string>
+</resources>

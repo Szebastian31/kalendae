@@ -9,9 +9,14 @@ const LANGS = {
   es: ['Español', 'es-ES'], fr: ['Français', 'fr-FR'], ru: ['Русский', 'ru-RU'], zh: ['中文', 'zh-CN'],
   ja: ['日本語', 'ja-JP'], pt: ['Português', 'pt-BR'], nl: ['Nederlands', 'nl-NL'], it: ['Italiano', 'it-IT'],
   hi: ['हिन्दी', 'hi-IN'], ar: ['العربية', 'ar', 'rtl'], el: ['Ελληνικά', 'el-GR'], cs: ['Čeština', 'cs-CZ'],
-  sv: ['Svenska', 'sv-SE'],
-  // coming in v1.1: ko, id, bn, tr, te, ro, hu, fi, no, sk, sw, fa, da, th, vi, bg
+  sv: ['Svenska', 'sv-SE'], ko: ['한국어', 'ko-KR'], id: ['Bahasa Indonesia', 'id-ID'], bn: ['বাংলা', 'bn-BD'],
+  tr: ['Türkçe', 'tr-TR'], te: ['తెలుగు', 'te-IN'], ro: ['Română', 'ro-RO'], hu: ['Magyar', 'hu-HU'],
+  fi: ['Suomi', 'fi-FI'], no: ['Norsk', 'nb-NO'], sk: ['Slovenčina', 'sk-SK'], sw: ['Kiswahili', 'sw-KE'],
+  fa: ['فارسی', 'fa-IR', 'rtl'], da: ['Dansk', 'da-DK'], th: ['ไทย', 'th-TH'], vi: ['Tiếng Việt', 'vi-VN'],
+  bg: ['Български', 'bg-BG'],
 };
+// phones report Norwegian as nb (Bokmål) or nn (Nynorsk); both open the Norwegian file
+const LANG_ALIAS = { nb: 'no', nn: 'no' };
 const I18N = {};
 const LANG_KEY = 'kalendae-lang';
 
@@ -20,7 +25,8 @@ const LANG = (() => {
   if (asked && LANGS[asked]) return asked;
   try { const saved = localStorage.getItem(LANG_KEY); if (saved && LANGS[saved]) return saved; } catch (e) {}
   for (const l of navigator.languages || [navigator.language || 'en']) {
-    const c = String(l).toLowerCase().split('-')[0];
+    let c = String(l).toLowerCase().split('-')[0];
+    c = LANG_ALIAS[c] || c;
     if (LANGS[c]) return c;
   }
   return 'en';

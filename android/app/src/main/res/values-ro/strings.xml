@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- notification channel names, as shown in Android settings -->
+<resources>
+    <string name="ch_upcoming">În curând</string>
+    <string name="ch_upcoming_desc">Reînnoiri și facturi cu câteva zile înainte de scadență</string>
+    <string name="ch_warn">Avertismente</string>
+    <string name="ch_warn_desc">Perioade de probă care devin plătite și conturi în care nu vor ajunge banii</string>
+</resources>

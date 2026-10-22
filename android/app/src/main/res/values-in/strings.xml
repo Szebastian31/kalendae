@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- notification channel names, as shown in Android settings -->
+<resources>
+    <string name="ch_upcoming">Akan datang</string>
+    <string name="ch_upcoming_desc">Perpanjangan dan tagihan beberapa hari sebelum jatuh tempo</string>
+    <string name="ch_warn">Peringatan</string>
+    <string name="ch_warn_desc">Uji coba yang akan berbayar, dan rekening yang akan kekurangan dana</string>
+</resources>
