@@ -16,7 +16,7 @@ No app store, no account, no bank login, no ads. Everything stays on your phone.
 
 ## What it does
 
-- **Safe to spend until payday.** Takes your spending account, subtracts every bill, subscription and move dated before your next income and the cushion you choose to keep, and shows what's left, per day.
+- **Safe to spend until payday.** Adds up the accounts you spend from day to day (banks, wallet apps, e-money and cash, counting only your share of shared ones; savings and investments stay out), subtracts every bill, subscription and move dated before your next income and the cushion you choose to keep, and shows what's left, per day.
 - **The month's orbit.** The next 30 days on three rings: money in and moves, monthly bills and subscriptions, and everything else including trials. Tap a dot to see what lands that day.
 - **A 60-day forecast with a likely range.** Each account's balance day by day, with an 80% band that's wider when your everyday spending varies and narrower as you check in.
 - **Every account, every currency.** Banks, savings, cards, PayPal, Revolut, Wise, Cash App, Venmo, BLIK, cash and about 400 banks and services worldwide, or any name you type. 33 currencies, converted at a 30-day average of the National Bank of Poland's rates.
@@ -29,7 +29,7 @@ No app store, no account, no bank login, no ads. Everything stays on your phone.
 - **Payday plan.** When income lands: what goes to bills, savings and everyday life, and what's free.
 - **Notifications, not alarms.** One quiet notification a day around the time you choose, like Consensus Weather, even when the app is closed.
 - **Three looks.** Night, Dawn and Paper.
-- **17 languages.** English, Polski, Deutsch, Українська, Español, Français, Русский, 中文, 日本語, Português, Nederlands, Italiano, हिन्दी, العربية, Ελληνικά, Čeština and Svenska. Kalendae opens in your phone's language; change it in Settings. 16 more are coming in v1.1.
+- **33 languages.** English, Polski, Deutsch, Українська, Español, Français, Русский, 中文, 日本語, Português, Nederlands, Italiano, हिन्दी, العربية, Ελληνικά, Čeština, Svenska, 한국어, Bahasa Indonesia, বাংলা, Türkçe, తెలుగు, Română, Magyar, Suomi, Norsk, Slovenčina, Kiswahili, فارسی, Dansk, ไทย, Tiếng Việt and Български. Kalendae opens in your phone's language; change it in Settings.
 
 ## Screens
 

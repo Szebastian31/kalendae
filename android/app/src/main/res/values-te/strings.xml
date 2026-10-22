@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- notification channel names, as shown in Android settings -->
+<resources>
+    <string name="ch_upcoming">రాబోయేవి</string>
+    <string name="ch_upcoming_desc">గడువుకు కొన్ని రోజుల ముందు పునరుద్ధరణలు, బిల్లులు</string>
+    <string name="ch_warn">హెచ్చరికలు</string>
+    <string name="ch_warn_desc">చెల్లింపుకు మారబోయే ట్రయల్స్, డబ్బు తక్కువ అయ్యే ఖాతాలు</string>
+</resources>

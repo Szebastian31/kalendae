@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- notification channel names, as shown in Android settings -->
+<resources>
+    <string name="ch_upcoming">Közelgő</string>
+    <string name="ch_upcoming_desc">Megújítások és számlák néhány nappal az esedékesség előtt</string>
+    <string name="ch_warn">Figyelmeztetések</string>
+    <string name="ch_warn_desc">Hamarosan fizetőssé váló próbaidőszakok és számlák, amelyeken elfogyhat a pénz</string>
+</resources>

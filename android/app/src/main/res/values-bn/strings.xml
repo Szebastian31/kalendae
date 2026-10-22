@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- notification channel names, as shown in Android settings -->
+<resources>
+    <string name="ch_upcoming">আসন্ন</string>
+    <string name="ch_upcoming_desc">নির্ধারিত তারিখের কয়েক দিন আগে নবায়ন ও বিল</string>
+    <string name="ch_warn">সতর্কতা</string>
+    <string name="ch_warn_desc">যে ট্রায়াল শীঘ্রই পেইড হবে, এবং যে অ্যাকাউন্টে টাকা কম পড়তে পারে</string>
+</resources>

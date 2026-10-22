@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- notification channel names, as shown in Android settings -->
+<resources>
+    <string name="ch_upcoming">Yaklaşanlar</string>
+    <string name="ch_upcoming_desc">Vadesinden birkaç gün önce yenilemeler ve faturalar</string>
+    <string name="ch_warn">Uyarılar</string>
+    <string name="ch_warn_desc">Ücretliye dönmek üzere olan denemeler ve parası yetmeyecek hesaplar</string>
+</resources>
