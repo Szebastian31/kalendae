@@ -98,3 +98,7 @@ After changing any file, bump `VERSION` in `sw.js` so installed web copies updat
 **Adding a language:** copy `js/i18n/pl.js` to `js/i18n/xx.js`, change `I18N.pl` to `I18N.xx` and translate the right-hand side of each line. Plurals are objects with the forms `Intl.PluralRules` uses for that language (`one`, `few`, `many`, `other`…). Then add the code to `LANGS` in `js/i18n.js`, the file to `sw.js`, and optionally `android/app/src/main/res/values-xx/strings.xml` for the notification channel names. A line that's missing simply shows in English.
 
 </details>
+
+<p align="center">
+  <img src="icons/icon-512.png" alt="Kalendae" width="170">
+</p>
