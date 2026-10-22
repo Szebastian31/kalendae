@@ -486,3 +486,14 @@ I18N.ar = {
   "The record and its receipt photo are deleted. Your balance stays as you typed it.": "يُحذف السجل وصورة الإيصال. يبقى رصيدك كما كتبته.",
   "That photo couldn’t be opened": "تعذّر فتح هذه الصورة",
 };
+
+// 1.0.2: spending money across accounts
+Object.assign(I18N.ar, {
+  "Investments": "استثمارات",
+  "Savings & investments": "المدخرات والاستثمارات",
+  "Spending money": "أموال الإنفاق",
+  "Spending accounts": "حسابات الإنفاق",
+  "Which accounts do you spend from day to day? Kalendae adds them up and counts what’s left until your next payday.": "من أي حسابات تنفق يوميًا؟ يجمعها Kalendae ويحسب ما يتبقى حتى موعد راتبك القادم.",
+  "Savings and investments stay out, so moving money into them counts as set aside, not as free to spend.": "لا تُحسب المدخرات والاستثمارات، لذا فإن تحويل المال إليها يُعدّ مالًا مُدّخرًا لا مالًا متاحًا للإنفاق.",
+  "Pick at least one account": "اختر حسابًا واحدًا على الأقل",
+});

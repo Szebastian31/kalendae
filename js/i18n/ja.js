@@ -486,3 +486,14 @@ I18N.ja = {
   "The record and its receipt photo are deleted. Your balance stays as you typed it.": "記録とレシートの写真が削除されます。残高は入力したままです。",
   "That photo couldn’t be opened": "その写真を開けませんでした",
 };
+
+// 1.0.2: spending money across accounts
+Object.assign(I18N.ja, {
+  "Investments": "投資",
+  "Savings & investments": "貯蓄・投資",
+  "Spending money": "使えるお金",
+  "Spending accounts": "日常の支払い口座",
+  "Which accounts do you spend from day to day? Kalendae adds them up and counts what’s left until your next payday.": "普段の支払いに使う口座はどれですか？Kalendae はそれらを合計し、次の給料日までに残る金額を計算します。",
+  "Savings and investments stay out, so moving money into them counts as set aside, not as free to spend.": "貯蓄と投資は含めません。そこへ移したお金は、使えるお金ではなく取り分けたお金として扱います。",
+  "Pick at least one account": "口座を1つ以上選んでください",
+});

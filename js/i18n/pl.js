@@ -486,3 +486,14 @@ I18N.pl = {
   "The record and its receipt photo are deleted. Your balance stays as you typed it.": "Zapis i zdjęcie paragonu zostaną usunięte. Saldo zostaje takie, jak je wpisałeś.",
   "That photo couldn’t be opened": "Nie udało się otworzyć tego zdjęcia",
 };
+
+// 1.0.2: spending money across accounts
+Object.assign(I18N.pl, {
+  "Investments": "Inwestycje",
+  "Savings & investments": "Oszczędności i inwestycje",
+  "Spending money": "Pieniądze na wydatki",
+  "Spending accounts": "Konta na wydatki",
+  "Which accounts do you spend from day to day? Kalendae adds them up and counts what’s left until your next payday.": "Z których kont wydajesz na co dzień? Kalendae je sumuje i liczy, ile zostaje do najbliższej wypłaty.",
+  "Savings and investments stay out, so moving money into them counts as set aside, not as free to spend.": "Oszczędności i inwestycje się nie liczą, więc przelew na nie to pieniądze odłożone, a nie wolne do wydania.",
+  "Pick at least one account": "Wybierz przynajmniej jedno konto",
+});

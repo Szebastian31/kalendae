@@ -31,7 +31,7 @@ const PROVIDERS = {
 // which lists to show first, by the kind of account
 const PROVIDER_ORDER = {
   bank: null, savings: ['Investing & savings'], card: ['Online banks & e-money'],
-  wallet: ['Wallet apps'], emoney: ['Online banks & e-money', 'Wallet apps'], cash: ['Cash'], other: null,
+  wallet: ['Wallet apps'], emoney: ['Online banks & e-money', 'Wallet apps'], cash: ['Cash'], other: null, invest: ['Investing & savings'],
 };
 // your region first, guessed from the currency you show money in
 const REGION_BY_CUR = {

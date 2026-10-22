@@ -486,3 +486,14 @@ I18N.uk = {
   "The record and its receipt photo are deleted. Your balance stays as you typed it.": "Запис і фото чека буде видалено. Залишок лишиться таким, як ти його ввів.",
   "That photo couldn’t be opened": "Не вдалося відкрити це фото",
 };
+
+// 1.0.2: spending money across accounts
+Object.assign(I18N.uk, {
+  "Investments": "Інвестиції",
+  "Savings & investments": "Заощадження та інвестиції",
+  "Spending money": "Гроші на витрати",
+  "Spending accounts": "Рахунки для витрат",
+  "Which accounts do you spend from day to day? Kalendae adds them up and counts what’s left until your next payday.": "З яких рахунків ви витрачаєте щодня? Kalendae додає їх і рахує, скільки лишається до наступної зарплати.",
+  "Savings and investments stay out, so moving money into them counts as set aside, not as free to spend.": "Заощадження та інвестиції не враховуються, тож переказ на них вважається відкладеними грошима, а не вільними для витрат.",
+  "Pick at least one account": "Виберіть хоча б один рахунок",
+});

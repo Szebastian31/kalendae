@@ -486,3 +486,14 @@ I18N.el = {
   "The record and its receipt photo are deleted. Your balance stays as you typed it.": "Η καταγραφή και η φωτογραφία διαγράφονται. Το υπόλοιπό σου μένει όπως το έγραψες.",
   "That photo couldn’t be opened": "Δεν ήταν δυνατό το άνοιγμα της φωτογραφίας",
 };
+
+// 1.0.2: spending money across accounts
+Object.assign(I18N.el, {
+  "Investments": "Επενδύσεις",
+  "Savings & investments": "Αποταμιεύσεις και επενδύσεις",
+  "Spending money": "Χρήματα για έξοδα",
+  "Spending accounts": "Λογαριασμοί εξόδων",
+  "Which accounts do you spend from day to day? Kalendae adds them up and counts what’s left until your next payday.": "Από ποιους λογαριασμούς ξοδεύεις καθημερινά; Το Kalendae τους προσθέτει και υπολογίζει τι μένει μέχρι τον επόμενο μισθό.",
+  "Savings and investments stay out, so moving money into them counts as set aside, not as free to spend.": "Οι αποταμιεύσεις και οι επενδύσεις δεν μετράνε, οπότε τα χρήματα που μεταφέρεις εκεί μετράνε ως αποθεματικό, όχι ως ελεύθερα για έξοδα.",
+  "Pick at least one account": "Διάλεξε τουλάχιστον έναν λογαριασμό",
+});

@@ -486,3 +486,14 @@ I18N.sv = {
   "The record and its receipt photo are deleted. Your balance stays as you typed it.": "Noteringen och kvittofotot raderas. Saldot förblir som du skrev det.",
   "That photo couldn’t be opened": "Fotot kunde inte öppnas",
 };
+
+// 1.0.2: spending money across accounts
+Object.assign(I18N.sv, {
+  "Investments": "Investeringar",
+  "Savings & investments": "Sparande och investeringar",
+  "Spending money": "Pengar att spendera",
+  "Spending accounts": "Konton för utgifter",
+  "Which accounts do you spend from day to day? Kalendae adds them up and counts what’s left until your next payday.": "Vilka konton spenderar du från i vardagen? Kalendae lägger ihop dem och räknar ut vad som blir kvar till nästa lön.",
+  "Savings and investments stay out, so moving money into them counts as set aside, not as free to spend.": "Sparande och investeringar räknas inte med, så pengar du flyttar dit räknas som undanlagda, inte som fria att spendera.",
+  "Pick at least one account": "Välj minst ett konto",
+});

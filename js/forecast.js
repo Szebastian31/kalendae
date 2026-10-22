@@ -1,6 +1,6 @@
 // Forecast: each account's balance for the next 60 days, with an 80% likely range,
 // in the currency you show money in.
-let fcSel = null; // account id, or 'all'
+let fcSel = null; // account id, 'spend' (your spending money together) or 'all'
 
 function renderForecast() {
   const v = $('#vForecast');
@@ -9,21 +9,24 @@ function renderForecast() {
     v.innerHTML = `<div class="card empty"><div class="big">${t('Nothing to forecast yet')}</div><p class="sub">${t('Add an account and a few bills, and the next 60 days appear here.')}</p></div>`;
     return;
   }
-  if (!fcSel || (fcSel !== 'all' && !accountById(fcSel))) fcSel = (mainAccount() || accts[0]).id;
-  const ids = fcSel === 'all' ? liveAccounts().map(a => a.id) : [fcSel];
+  const pool = spendingAccounts();
+  const many = pool.length > 1;
+  if (!fcSel || (fcSel === 'spend' && !many) || (fcSel !== 'all' && fcSel !== 'spend' && !accountById(fcSel))) fcSel = many ? 'spend' : (mainAccount() || accts[0]).id;
+  const ids = fcSel === 'all' ? liveAccounts().map(a => a.id) : fcSel === 'spend' ? pool.map(a => a.id) : [fcSel];
   const f = forecast(ids);
   const low = lowestPoint(f), end = f[HORIZON];
-  const sel = fcSel === 'all' ? null : accountById(fcSel);
-  const floor = sel && sel === mainAccount() && S.settings.floor ? conv(S.settings.floor, sel.cur) : null;
+  const sel = fcSel === 'all' || fcSel === 'spend' ? null : accountById(fcSel);
+  const title = sel ? esc(sel.name) : fcSel === 'spend' ? t('Spending money') : t('Everything');
+  const floor = S.settings.floor && (fcSel === 'spend' || (sel && !many && pool[0] === sel)) ? spendFloor() : null;
   const short = d => dfmt(d, { day: 'numeric', month: 'short' });
-  v.innerHTML = `<div class="chips" style="margin:8px 0 2px">${accts.map(a =>
+  v.innerHTML = `<div class="chips" style="margin:8px 0 2px">${many ? `<button class="chip ${fcSel === 'spend' ? 'on' : ''}" data-f="spend">${t('Spending money')}</button>` : ''}${accts.map(a =>
       `<button class="chip ${a.id === fcSel ? 'on' : ''}" data-f="${a.id}"><span class="dot" style="background:${accColor(a)}"></span>${esc(a.name)}</button>`).join('')}
       ${liveAccounts().length > 1 ? `<button class="chip ${fcSel === 'all' ? 'on' : ''}" data-f="all">${t('Everything')}</button>` : ''}</div>
-    <div class="card"><h3><span>${sel ? esc(sel.name) : t('Everything')} · ${t('60 days')} · ${S.settings.display}</span><em>${t('80% likely range')}</em></h3>
+    <div class="card"><h3><span>${title} · ${t('60 days')} · ${S.settings.display}</span><em>${t('80% likely range')}</em></h3>
       <div class="chartWrap" id="chartWrap"><svg id="chart"></svg><div class="tip" id="tip"></div></div>
       <div class="fkeys"><span><i style="background:${sel ? accColor(sel) : 'var(--ink)'}"></i>${t('Expected')}</span><span><i class="band"></i>${t('Likely range')}</span>${floor != null ? `<span><i class="dash"></i>${t('Your floor')}</span>` : ''}<span><i class="pay"></i>${t('Payday')}</span></div>
       <div class="stats">
-        <div class="stat"><div class="k">${t('Now')}</div><div class="v num">${fmt(f[0].mid)}</div><div class="s">${sel ? t('updated {ago}', { ago: agoText(sel.balanceAt) }) : t('all accounts')}</div></div>
+        <div class="stat"><div class="k">${t('Now')}</div><div class="v num">${fmt(f[0].mid)}</div><div class="s">${sel ? t('updated {ago}', { ago: agoText(sel.balanceAt) }) : fcSel === 'spend' ? tn(pool.length, '{n} account', '{n} accounts') : t('all accounts')}</div></div>
         <div class="stat"><div class="k">${t('Lowest')}</div><div class="v num" style="color:${low.mid < 0 ? 'var(--warn)' : 'inherit'}">${fmt(low.mid)}</div><div class="s">${short(low.date)}</div></div>
         <div class="stat"><div class="k">${short(end.date)}</div><div class="v num">${fmt(end.mid)}</div><div class="s">± ${fmt((end.hi - end.lo) / 2)}</div></div></div></div>
     <div class="card"><h3>${t('What moves the line')}</h3><ul class="list" id="fcList"></ul></div>

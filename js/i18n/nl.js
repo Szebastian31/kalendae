@@ -486,3 +486,14 @@ I18N.nl = {
   "The record and its receipt photo are deleted. Your balance stays as you typed it.": "De notitie en de foto van de bon worden verwijderd. Je saldo blijft zoals je het typte.",
   "That photo couldn’t be opened": "Die foto kon niet worden geopend",
 };
+
+// 1.0.2: spending money across accounts
+Object.assign(I18N.nl, {
+  "Investments": "Beleggingen",
+  "Savings & investments": "Sparen & beleggen",
+  "Spending money": "Bestedingsgeld",
+  "Spending accounts": "Rekeningen voor uitgaven",
+  "Which accounts do you spend from day to day? Kalendae adds them up and counts what’s left until your next payday.": "Van welke rekeningen geef je dagelijks uit? Kalendae telt ze op en rekent uit wat er overblijft tot je volgende salaris.",
+  "Savings and investments stay out, so moving money into them counts as set aside, not as free to spend.": "Spaargeld en beleggingen tellen niet mee, dus geld dat je daarheen overmaakt telt als opzijgezet, niet als vrij te besteden.",
+  "Pick at least one account": "Kies minstens één rekening",
+});

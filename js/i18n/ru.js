@@ -486,3 +486,14 @@ I18N.ru = {
   "The record and its receipt photo are deleted. Your balance stays as you typed it.": "Запись и фото чека будут удалены. Остаток останется таким, как ты его ввёл.",
   "That photo couldn’t be opened": "Не удалось открыть это фото",
 };
+
+// 1.0.2: spending money across accounts
+Object.assign(I18N.ru, {
+  "Investments": "Инвестиции",
+  "Savings & investments": "Сбережения и инвестиции",
+  "Spending money": "Деньги на расходы",
+  "Spending accounts": "Счета для расходов",
+  "Which accounts do you spend from day to day? Kalendae adds them up and counts what’s left until your next payday.": "С каких счетов вы тратите каждый день? Kalendae складывает их и считает, сколько остаётся до следующей зарплаты.",
+  "Savings and investments stay out, so moving money into them counts as set aside, not as free to spend.": "Сбережения и инвестиции не учитываются, поэтому перевод на них считается отложенными деньгами, а не свободными для трат.",
+  "Pick at least one account": "Выберите хотя бы один счёт",
+});

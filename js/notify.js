@@ -48,10 +48,10 @@ function buildNotifEvents(n = 45) {
               + (it.varies ? ' ' + t('(about)') : '') });
     });
   });
-  // an account about to run short: warn 3 days ahead (or today, if it's sooner)
+  // an account (or your spending money as a whole) about to run short: warn 3 days ahead (or today, if it's sooner)
   warnings().forEach(w => {
-    push(w.first.t - 3, { id: `short-${w.acct.id}-${isoDay(w.first.date)}`, warn: true,
-      title: t('{a} may run short {when}', { a: w.acct.name, when: whenText(w.first.t) }),
+    push(w.first.t - 3, { id: `short-${w.pool ? 'spend' : w.acct.id}-${isoDay(w.first.date)}`, warn: true,
+      title: t('{a} may run short {when}', { a: w.label || w.acct.name, when: whenText(w.first.t) }),
       body: t('Lowest point {v} on {d}. Open Kalendae to plan a top-up.', { v: fmt(w.low.mid), d: dfmt(w.low.date, { day: 'numeric', month: 'short' }) }) });
   });
   // the weekly check-in
