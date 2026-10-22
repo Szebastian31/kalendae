@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kalendae banner</title>
+<!-- The README banner: five real screens in phone frames. tools/screenshots.sh turns this page into screenshots/banner.png. -->
+<style>
+  :root{--top:#070d26;--mid:#14215a;--bot:#2b3d7e;--glow:rgba(143,214,255,.22);--ink:#eef3ff;--muted:rgba(238,243,255,.62);--gold:#ffcf9e}
+  [data-look=dawn]{--top:#2a1b6a;--mid:#77479a;--bot:#e0828e;--glow:rgba(255,205,150,.45);--ink:#f4f0ff;--muted:rgba(244,240,255,.7);--gold:#ffe2bc}
+  [data-look=paper]{--top:#f7f1e6;--mid:#f1e7d8;--bot:#ecdcca;--glow:rgba(255,180,150,.35);--ink:#22182e;--muted:rgba(34,24,46,.6);--gold:#b4532a}
+  *{box-sizing:border-box;margin:0}
+  html,body{width:1280px;height:720px;overflow:hidden}
+  body{font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;color:var(--ink);
+    background:radial-gradient(70% 60% at 50% 0%,var(--glow),transparent 70%),linear-gradient(180deg,var(--top),var(--mid) 60%,var(--bot))}
+  header{position:absolute;left:0;right:0;top:44px;text-align:center}
+  header .row{display:inline-flex;align-items:center;gap:16px}
+  header .ico{width:58px;height:58px;border-radius:16px;overflow:hidden;box-shadow:0 10px 24px -10px rgba(0,0,0,.6)}
+  header .ico svg{width:100%;height:100%;display:block}
+  h1{font-family:"New York","Iowan Old Style",Palatino,Georgia,serif;font-weight:400;font-size:56px;letter-spacing:-1px;line-height:1}
+  header p{margin-top:12px;font-size:19px;color:var(--muted)}
+  .phones{position:absolute;left:0;right:0;top:200px;height:640px}
+  .phone{position:absolute;top:0;width:250px;aspect-ratio:390/844;border-radius:40px;padding:9px;background:#0a0d18;
+    box-shadow:0 0 0 1.5px rgba(255,255,255,.18) inset,0 40px 70px -30px rgba(0,0,0,.75),0 0 0 1px rgba(0,0,0,.4)}
+  .phone img{display:block;width:100%;height:100%;border-radius:32px;object-fit:cover;object-position:top}
+  .phone::before{content:"";position:absolute;top:18px;left:50%;width:74px;height:22px;margin-left:-37px;border-radius:12px;background:#0a0d18;z-index:2}
+  .p1{left:110px;transform:translateY(70px) rotate(-6deg)}
+  .p2{left:330px;transform:translateY(26px) rotate(-2.5deg)}
+  .p3{left:515px;z-index:3;width:250px}
+  .p4{left:700px;transform:translateY(26px) rotate(2.5deg)}
+  .p5{left:920px;transform:translateY(70px) rotate(6deg)}
+  .p2,.p4{z-index:2}
+</style>
+</head>
+<body>
+<header>
+  <div class="row"><div class="ico" id="ico"></div><h1>Kalendae</h1></div>
+  <p>A forecast for your money: what’s coming, and what’s safe to spend until payday.</p>
+</header>
+<div class="phones">
+  <div class="phone p1"><img src="../screenshots/accounts.png" alt=""></div>
+  <div class="phone p2"><img src="../screenshots/forecast.png" alt=""></div>
+  <div class="phone p3"><img src="../screenshots/today.png" alt=""></div>
+  <div class="phone p4"><img src="../screenshots/commitments.png" alt=""></div>
+  <div class="phone p5"><img src="../screenshots/spending.png" alt=""></div>
+</div>
+<script src="../icons/icon.js"></script>
+<script>
+  const look = (location.search.match(/[?&]look=(\w+)/) || [])[1];
+  if (look) document.documentElement.dataset.look = look;
+  document.getElementById('ico').innerHTML = iconSVG({ size: 58 });
+</script>
+</body>
+</html>

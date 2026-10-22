@@ -4,12 +4,7 @@
 
 No app store, no account, no bank login, no ads. Everything stays on your phone.
 
-<p align="center">
-  <img src="screenshots/today.png" width="24%" alt="Today: the month's orbit and what's safe to spend">
-  <img src="screenshots/forecast.png" width="24%" alt="Forecast: the next 60 days with a likely range">
-  <img src="screenshots/commitments.png" width="24%" alt="Commitments: bills, subscriptions and the keep / review / cancel rings">
-  <img src="screenshots/accounts.png" width="24%" alt="Accounts in several currencies">
-</p>
+<p align="center"><img src="screenshots/banner.png" width="100%" alt="Kalendae on five phones: accounts, forecast, today, commitments and spending"></p>
 
 ---
 
@@ -29,11 +24,22 @@ No app store, no account, no bank login, no ads. Everything stays on your phone.
 - **Moves in any currency.** Count a move in the currency it really is, like USD stocks or EUR savings.
 - **Subscriptions that earn their place.** Usage, price rises, cheaper plans and overlap vote keep, review or cancel, shown as a ring.
 - **Trials.** Kalendae warns you 2 days before a trial turns paid, and on the day.
+- **Log a spend in seconds.** Tap **+**, type the amount and pick the account. It comes straight off that balance, so "safe to spend" stays true between check-ins. Add a photo of the receipt for returns, warranties or receipt apps like Google Opinion Rewards; save it to your gallery or share it from Kalendae.
 - **Weekly check-in.** Type today's balances (or count your cash note by note) and Kalendae works out what went on everyday things, then learns your real everyday spending.
 - **Payday plan.** When income lands: what goes to bills, savings and everyday life, and what's free.
 - **Notifications, not alarms.** One quiet notification a day around the time you choose, like Consensus Weather, even when the app is closed.
 - **Three looks.** Night, Dawn and Paper.
 - **17 languages.** English, Polski, Deutsch, Українська, Español, Français, Русский, 中文, 日本語, Português, Nederlands, Italiano, हिन्दी, العربية, Ελληνικά, Čeština and Svenska. Kalendae opens in your phone's language; change it in Settings. 16 more are coming in v1.1.
+
+## Screens
+
+<p align="center">
+  <img src="screenshots/today.png" width="19%" alt="Today: the month's orbit and what's safe to spend">
+  <img src="screenshots/forecast.png" width="19%" alt="Forecast: the next 60 days with a likely range">
+  <img src="screenshots/commitments.png" width="19%" alt="Commitments: bills, subscriptions and the keep / review / cancel rings">
+  <img src="screenshots/accounts.png" width="19%" alt="Accounts in several currencies">
+  <img src="screenshots/spending.png" width="19%" alt="Logging a spend with its receipt">
+</p>
 
 ## Getting started
 
@@ -62,34 +68,33 @@ Kalendae is a forecast, not a bank statement. It only knows what you tell it: th
 
 ## Privacy
 
-Everything stays on your phone. Your accounts, amounts and dates are saved on your device only and never uploaded. The only thing Kalendae downloads is the public exchange-rate table from the National Bank of Poland. Backups are files you save yourself, optionally locked with a password (AES-256).
+Everything stays on your phone. Your accounts, amounts, dates and receipt photos are saved on your device only and never uploaded. The only thing Kalendae downloads is the public exchange-rate table from the National Bank of Poland. Backups are files you save yourself (receipt photos included), optionally locked with a password (AES-256).
 
 ---
 
 _Kalendae is Latin for the first day of the Roman month, first set by the new moon, when debts fell due. The moneylender's ledger was a calendarium, which is where "calendar" comes from. It's a sibling to Consensus Weather, Fidelis, Vestis, Caelum, Hora and Augur._
 
+
 <details>
 <summary>For developers</summary>
 
-The interface is plain HTML, CSS and JavaScript, hosted on GitHub Pages. The Android app (`app/`) bundles those same files into a native WebView shell that adds a daily notification about what's coming up, sent even when the app is closed (an inexact daily check, like Consensus Weather, re-planned after a restart), saving and opening backup files, the share sheet and vibration. GitHub Actions builds the APK on every push and publishes it as a release.
+The interface is plain HTML, CSS and JavaScript, hosted on GitHub Pages. The Android app (`android/`) bundles those same files into a native WebView shell that adds a daily notification about what's coming up, sent even when the app is closed (an inexact daily check, like Consensus Weather, re-planned after a restart), saving and opening backup files, receipt photos (camera or gallery, saving to Pictures, sharing), the share sheet and vibration. GitHub Actions builds the APK on every push and publishes it as a release.
 
-| File | What it does |
+| Where | What it is |
 | --- | --- |
 | `index.html` | Layout and styles |
-| `i18n.js`, `i18n/` | Languages: `t('English text')` in the code, one file per language mapping each text to its translation |
-| `store.js`, `money.js` | Saving on the phone, backups, currencies and NBP exchange rates |
-| `items.js`, `subs.js` | Income, bills, subscriptions, moves, the forecast maths, and the keep / review / cancel vote |
-| `checkin.js`, `notify.js` | Weekly check-ins and cash count, and the notifications handed to Android |
-| `today.js`, `forecast.js`, `commit.js`, `accounts.js`, `settings.js` | The screens |
-| `banks.js`, `ui.js`, `app.js` | Banks around the world, shared helpers, the app shell |
-| `icons/icon.js` | The icon drawing, used by the app and `icons.html` |
-| `icons/icon.svg`, `icons.html` | The icon, and a page that exports the PNG icons |
+| `js/` | The app. `store.js` saving and backups, `money.js` currencies and NBP rates, `items.js` the forecast maths, `subs.js` the keep / review / cancel vote, `checkin.js` check-ins, `spend.js` logged spends and receipts, `notify.js` notifications, `today.js` `forecast.js` `commit.js` `accounts.js` `settings.js` the screens, `banks.js` banks around the world, `ui.js` helpers, `app.js` the shell |
+| `js/i18n.js`, `js/i18n/` | Languages: `t('English text')` in the code, one file per language mapping each text to its translation |
+| `icons/` | The icon (`icon.js` draws it, `icon.svg`), the PNGs, and `export.html`, which makes the PNGs |
 | `manifest.webmanifest`, `sw.js` | Home-screen install and offline cache |
-| `app/` | Android app: WebView shell, daily notifications, backup files, launcher icon, translated notification channel names |
+| `android/` | Android app: WebView shell, daily notifications, backups and receipt photos, launcher icon, translated notification channel names, and the signing key |
+| `tools/screenshots.sh` | Makes everything in `screenshots/` from the real app with sample data |
 | `.github/workflows/build.yml` | Builds the APK and publishes it as a release |
 
-After changing any file, bump `VERSION` in `sw.js` so installed web copies update, and `versionName` + `versionCode` in `app/build.gradle` for a new APK release. A `.js` file at the repo root or in `i18n/` is bundled into the APK automatically; add it to `index.html` (root files) and `sw.js` too.
+After changing any file, bump `VERSION` in `sw.js` so installed web copies update, and `versionName` + `versionCode` in `android/app/build.gradle` for a new APK release. Every `.js` file in `js/` is bundled into the APK automatically; a new one also needs a `<script>` line in `index.html` and an entry in `sw.js`.
 
-**Adding a language:** copy `i18n/pl.js` to `i18n/xx.js`, change `I18N.pl` to `I18N.xx` and translate the right-hand side of each line. Plurals are objects with the forms `Intl.PluralRules` uses for that language (`one`, `few`, `many`, `other`…). Then add the code to `LANGS` in `i18n.js`, the file to `sw.js`, and optionally `app/src/main/res/values-xx/strings.xml` for the notification channel names. A line that's missing simply shows in English.
+**Screenshots:** `tools/screenshots.sh` (or `tools/screenshots.sh pl dawn` for Polish in the Dawn look). It needs Google Chrome and touches none of your own data.
+
+**Adding a language:** copy `js/i18n/pl.js` to `js/i18n/xx.js`, change `I18N.pl` to `I18N.xx` and translate the right-hand side of each line. Plurals are objects with the forms `Intl.PluralRules` uses for that language (`one`, `few`, `many`, `other`…). Then add the code to `LANGS` in `js/i18n.js`, the file to `sw.js`, and optionally `android/app/src/main/res/values-xx/strings.xml` for the notification channel names. A line that's missing simply shows in English.
 
 </details>

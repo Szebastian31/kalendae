@@ -3,6 +3,8 @@ name: Build APK
 on:
   push:
     branches: [ main ]
+    # README and screenshot changes don't need a new APK
+    paths-ignore: [ 'README.md', 'screenshots/**', 'tools/**' ]
   workflow_dispatch:
 
 permissions:
@@ -36,16 +38,17 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      # the version, release name and APK file name all come from versionName in app/build.gradle
+      # the version, release name and APK file name all come from versionName in android/app/build.gradle
       - name: Read version
         id: ver
-        run: echo "name=$(grep -m1 'versionName' app/build.gradle | sed -E 's/.*"([^"]+)".*/\1/')" >> "$GITHUB_OUTPUT"
+        run: echo "name=$(grep -m1 'versionName' android/app/build.gradle | sed -E 's/.*"([^"]+)".*/\1/')" >> "$GITHUB_OUTPUT"
 
       - name: Build debug APK
+        working-directory: android
         run: gradle assembleDebug --no-daemon --stacktrace
 
       - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk "Kalendae_v${{ steps.ver.outputs.name }}.apk"
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk "Kalendae_v${{ steps.ver.outputs.name }}.apk"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4

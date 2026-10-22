@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- the only files Kalendae ever hands to another app: a fresh camera photo of a receipt, and a receipt you share -->
+<paths>
+    <cache-path name="camera" path="camera/" />
+    <cache-path name="shared" path="shared/" />
+</paths>
