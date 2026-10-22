@@ -1,57 +1,74 @@
-// Kalendae 0.1: the foundation. Shows the icon, checks what this phone allows,
-// and sends a test notification through Android (or the browser) to prove the pipeline works.
-const NATIVE = window.KalendaeNative || null;
-const $ = s => document.querySelector(s);
+// Kalendae 0.2: the shell. Tabs, header, and the screens that arrive in the next steps.
+let CURRENT_TAB = 'today';
 
-$('#ico').innerHTML = iconSVG({ size: 116 });
-
-// the daily check: one notification a day, roughly at this time, like Consensus Weather
-if (NATIVE) NATIVE.setNotifConfig(JSON.stringify({ enabled: true, time: '09:00', groupTitle: '{n} payments coming up' }));
-
-function checks() {
-  const rows = [];
-  rows.push(['Running as', NATIVE ? `Android app ${NATIVE.version()}` : 'Web app']);
-  const fix = $('#fix');
-  fix.style.display = 'none';
-  if (NATIVE) {
-    const notif = NATIVE.notificationsAllowed();
-    rows.push(['Notifications', notif ? 'On' : 'Off', notif]);
-    rows.push(['Daily check', notif ? `Around ${NATIVE.notifTime() || '09:00'}` : 'Waiting for notifications', notif]);
-    fix.style.display = '';
-    if (!notif) { fix.textContent = 'Allow notifications'; fix.onclick = () => NATIVE.askNotifications(); }
-    else { fix.textContent = 'Notification settings'; fix.onclick = () => NATIVE.openNotifSettings(); }
-  } else {
-    const p = 'Notification' in window ? Notification.permission : 'unsupported';
-    rows.push(['Notifications', p === 'granted' ? 'On' : p === 'unsupported' ? 'Not available' : 'Off', p === 'granted']);
-    rows.push(['Daily check', 'Only in the Android app', false]);
-  }
-  let saved = false;
-  try { localStorage.setItem('kalendae-test', '1'); saved = localStorage.getItem('kalendae-test') === '1'; localStorage.removeItem('kalendae-test'); } catch (e) {}
-  rows.push(['Saving on this phone', saved ? 'Works' : 'Blocked', saved]);
-  $('#checks').innerHTML = rows.map(([k, v, ok]) =>
-    `<div class="row"><span>${k}</span><span class="${ok === undefined ? '' : ok ? 'ok' : 'no'}">${v}</span></div>`).join('');
+function showTab(name) {
+  CURRENT_TAB = name;
+  $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+  $$('.view').forEach(v => v.classList.toggle('on', v.dataset.view === name));
+  $('#scroll').scrollTop = 0;
 }
+$$('#tabs button').forEach(b => b.onclick = () => { tick('8'); showTab(b.dataset.tab); });
 
-$('#test').onclick = () => {
-  const title = 'Netflix renews in 3 days';
-  const body = '67 zł from Shared on Sunday. This is a test: renewals, bills and trial endings will look like this.';
-  if (NATIVE) {
-    if (!NATIVE.notificationsAllowed()) { NATIVE.askNotifications(); $('#msg').textContent = 'Allow notifications first, then tap again.'; return; }
-    NATIVE.testNotification(title, body, false);
-    NATIVE.vibrate('18');
-    $('#msg').textContent = 'Sent. Pull down your notifications to see it.';
+function renderHeader() {
+  $('#headIcon').innerHTML = iconSVG({ size: 38 });
+  $('#today').textContent = dateLong();
+  $('#curPill').innerHTML = `${S.settings.display}${S.settings.currencies.length > 1 ? ' <span class="muted">▾</span>' : ''}`;
+}
+// tap the currency pill to flip through the currencies you use
+$('#curPill').onclick = () => {
+  const c = S.settings.currencies;
+  if (c.length < 2) { settingsSheet(); return; }
+  S.settings.display = c[(c.indexOf(S.settings.display) + 1) % c.length];
+  save();
+  toast(`Showing money in ${CURRENCIES[S.settings.display][0].toLowerCase()}`);
+};
+$('#openSettings').onclick = settingsSheet;
+
+function renderToday() {
+  const accts = liveAccounts();
+  const v = $('#vToday');
+  if (!accts.length) {
+    v.innerHTML = `<div class="card soon"><div style="width:110px;margin:0 auto">${iconSVG({ size: 110 })}</div>
+      <div class="big">A forecast for your money</div>
+      <p class="sub">Start with your accounts. Next, your income, bills and subscriptions, and Kalendae shows what's safe to spend until payday.</p>
+      <button class="btn wide" style="margin-top:18px" id="goAccts">Add your accounts</button></div>`;
+    $('#goAccts').onclick = () => { showTab('accounts'); accountSheet(); };
     return;
   }
-  if (!('Notification' in window)) { $('#msg').textContent = 'This browser can’t show notifications.'; return; }
-  Notification.requestPermission().then(p => {
-    checks();
-    if (p !== 'granted') { $('#msg').textContent = 'Notifications are off for this site.'; return; }
-    new Notification(title, { body, icon: 'icons/icon-192.png' });
-    $('#msg').textContent = 'Sent.';
-  });
+  const stale = accts.filter(a => a.balanceAt && (new Date(todayISO()) - new Date(a.balanceAt)) / 864e5 > 7);
+  v.innerHTML = `<div class="card"><h3>What's yours <em>${accts.length} accounts</em></h3>
+      <div class="big num">${fmt(netWorth())}</div>
+      <p class="sub" style="margin-top:8px">${stale.length ? `${stale.length} balance${stale.length > 1 ? 's are' : ' is'} more than a week old. Tap Accounts to update.` : 'All balances checked this week.'}</p></div>
+    <div class="card soon" style="padding:28px 16px"><div class="big" style="font-size:24px">The orbit comes next</div>
+      <p class="sub">Version 0.3 adds income, bills and subscriptions, then the month's orbit, the forecast and “safe to spend”.</p>
+      ${NATIVE ? '<button class="btn ghost" style="margin-top:14px" id="testN">Send a test notification</button>' : ''}</div>`;
+  if (NATIVE) $('#testN').onclick = () => {
+    if (!NATIVE.notificationsAllowed()) { NATIVE.askNotifications(); return; }
+    NATIVE.testNotification('Netflix renews in 3 days', '67 zł from Shared on Sunday. Renewals, bills and trial endings will look like this.', false);
+    toast('Sent. Pull down your notifications.');
+  };
+}
+
+function renderSoon(id, title, text) {
+  $(id).innerHTML = `<div class="card soon"><div class="big" style="font-size:26px">${title}</div><p class="sub">${text}</p></div>`;
+}
+
+function renderAll() {
+  applyLook();
+  renderHeader();
+  renderToday();
+  renderAccounts();
+  renderSoon('#vForecast', 'Forecast', 'Each account’s balance for the next 60 days, with an honest likely range, arrives in version 0.3.');
+  renderSoon('#vCommit', 'Commitments', 'Subscriptions, bills, trials and the keep-or-cancel rings arrive in version 0.3.');
+}
+onChange(renderAll);
+
+window.kalendaeResume = () => {
+  renderHeader();
+  refreshRates().then(changed => { if (changed) renderAll(); });
 };
 
-window.kalendaeResume = checks;
-checks();
-
+renderAll();
+syncNotifConfig();
+refreshRates().then(changed => { if (changed) renderAll(); });
 if ('serviceWorker' in navigator && !NATIVE && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
