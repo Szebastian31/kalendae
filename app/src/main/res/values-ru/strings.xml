@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- notification channel names, as shown in Android settings -->
+<resources>
+    <string name="ch_upcoming">Скоро</string>
+    <string name="ch_upcoming_desc">Продления и счета за несколько дней до срока</string>
+    <string name="ch_warn">Предупреждения</string>
+    <string name="ch_warn_desc">Пробные периоды, которые скоро станут платными, и счета, на которых может не хватить денег</string>
+</resources>

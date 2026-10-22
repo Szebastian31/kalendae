@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- notification channel names, as shown in Android settings -->
+<resources>
+    <string name="ch_upcoming">Binnenkort</string>
+    <string name="ch_upcoming_desc">Verlengingen en rekeningen een paar dagen voor de vervaldatum</string>
+    <string name="ch_warn">Waarschuwingen</string>
+    <string name="ch_warn_desc">Proefperiodes die bijna betaald worden en rekeningen die tekort dreigen te komen</string>
+</resources>

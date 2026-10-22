@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- notification channel names, as shown in Android settings -->
+<resources>
+    <string name="ch_upcoming">Έρχονται</string>
+    <string name="ch_upcoming_desc">Ανανεώσεις και λογαριασμοί λίγες μέρες πριν τη λήξη</string>
+    <string name="ch_warn">Προειδοποιήσεις</string>
+    <string name="ch_warn_desc">Δοκιμές που σύντομα γίνονται επί πληρωμή και λογαριασμοί που μπορεί να μην επαρκούν</string>
+</resources>

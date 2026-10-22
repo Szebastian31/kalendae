@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- notification channel names, as shown in Android settings -->
+<resources>
+    <string name="ch_upcoming">जल्द आने वाले</string>
+    <string name="ch_upcoming_desc">नवीनीकरण और बिल, देय तिथि से कुछ दिन पहले</string>
+    <string name="ch_warn">चेतावनियाँ</string>
+    <string name="ch_warn_desc">जल्द ही सशुल्क होने वाले ट्रायल, और वे खाते जिनमें पैसे कम पड़ सकते हैं</string>
+</resources>

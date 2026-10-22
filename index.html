@@ -56,7 +56,7 @@ header.top .ico{width:38px;height:38px;flex:none;border-radius:11px;overflow:hid
 header.top .ico svg{width:100%;height:100%;display:block}
 header.top h1{font-family:var(--serif);font-weight:400;font-size:26px;line-height:1;letter-spacing:-.3px}
 header.top .date{font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin-top:4px}
-.pill{margin-left:auto;border:1px solid transparent;background:var(--glass) padding-box,var(--edge) border-box;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:700;letter-spacing:.4px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.pill{margin-inline-start:auto;border:1px solid transparent;background:var(--glass) padding-box,var(--edge) border-box;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:700;letter-spacing:.4px;cursor:pointer;display:flex;align-items:center;gap:6px}
 .iconbtn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;border:1px solid transparent;background:var(--glass) padding-box,var(--edge) border-box;cursor:pointer;flex:none}
 .iconbtn svg,.sv{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 
@@ -84,7 +84,7 @@ header.top .date{font-size:11px;font-weight:700;letter-spacing:1.4px;text-transf
 .acct .meta{font-size:11.5px;color:var(--muted);margin-top:1px}
 .acct .bal{text-align:right;font-family:var(--serif);font-size:18px;white-space:nowrap}
 .acct .bal small{display:block;font-family:var(--sans);font-size:11px;color:var(--muted)}
-.tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:1px 6px;border-radius:6px;background:var(--tile);color:var(--ink2);margin-left:6px;vertical-align:1px}
+.tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:1px 6px;border-radius:6px;background:var(--tile);color:var(--ink2);margin-inline-start:6px;vertical-align:1px}
 
 .empty{text-align:center;padding:26px 8px 10px}
 .empty .big{font-size:30px;margin:12px 0 6px}
@@ -143,7 +143,7 @@ header.top .date{font-size:11px;font-weight:700;letter-spacing:1.4px;text-transf
 .orbitCenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:44%;max-width:170px;text-align:center}
 .orbitCenter .k{font-size:9.5px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted)}
 .orbitCenter .big{font-size:clamp(26px,8.5vw,36px);margin:7px 0 5px}
-.orbitCenter .row{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;padding:2px 0;color:var(--ink2);text-align:left}
+.orbitCenter .row{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;padding:2px 0;color:var(--ink2);text-align:start}
 .orbitCenter .row b{color:var(--ink);white-space:nowrap}
 .legend{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;font-size:10.5px;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:5px}
@@ -181,7 +181,7 @@ header.top .date{font-size:11px;font-weight:700;letter-spacing:1.4px;text-transf
 .ci:first-of-type{border-top:0}
 .ci-h{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .ci-h .meta{font-size:11.5px;color:var(--muted)}
-.ci-h .tag{margin-left:auto}
+.ci-h .tag{margin-inline-start:auto}
 .sw.sm{width:30px;height:30px;border-radius:10px}
 .sw.sm svg{width:16px;height:16px}
 .notes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
@@ -247,6 +247,9 @@ nav.tabs button.on svg{color:var(--gold)}
 #toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 16px);transform:translate(-50%,-10px);z-index:70;padding:9px 14px;border-radius:16px;font-size:13px;font-weight:600;
   background:var(--ink);color:var(--onInk);opacity:0;transition:all .3s;pointer-events:none;max-width:88%;text-align:center}
 #toast.show{opacity:1;transform:translate(-50%,0)}
+/* right-to-left (Arabic): mirror the layout, keep charts, rings and number bars reading left to right */
+[dir=rtl] .orbitWrap,[dir=rtl] .chartWrap,[dir=rtl] .mix,[dir=rtl] .planbar{direction:ltr}
+[dir=rtl] .sw-t.on::after{transform:translateX(-18px)}[dir=rtl] .sw-t::after{left:auto;right:3px}
 </style>
 </head>
 <body>
@@ -255,7 +258,7 @@ nav.tabs button.on svg{color:var(--gold)}
     <div class="ico" id="headIcon"></div>
     <div><h1>Kalendae</h1><div class="date" id="today"></div></div>
     <button class="pill num" id="curPill" title="Show money in"></button>
-    <button class="iconbtn" id="openSettings" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+    <button class="iconbtn" id="openSettings" aria-label="Settings" data-t-aria="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
   </header>
 
   <section class="view on" data-view="today" id="vToday"></section>
@@ -265,10 +268,10 @@ nav.tabs button.on svg{color:var(--gold)}
 </main></div>
 
 <nav class="tabs" id="tabs">
-  <button class="on" data-tab="today"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" stroke-dasharray="2 2.6"/><path d="M12 5.5a3.2 3.2 0 1 0 3.2 4 2.6 2.6 0 1 1-3.2-4z" fill="currentColor" stroke="none"/></svg>Today</button>
-  <button data-tab="forecast"><svg viewBox="0 0 24 24"><path d="M3 15c3-1 4-6 7-6s3 5 6 5 3-3 5-4"/><path d="M3 18c3-.5 4-3 7-3s3 2.5 6 2.5 3-1.5 5-2" stroke-opacity=".45"/></svg>Forecast</button>
-  <button data-tab="commit"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="3"/><path d="M8 10h8M8 14h5"/></svg>Commitments</button>
-  <button data-tab="accounts"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="13" height="10" rx="2.5"/><rect x="8" y="4" width="13" height="10" rx="2.5"/></svg>Accounts</button>
+  <button class="on" data-tab="today"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" stroke-dasharray="2 2.6"/><path d="M12 5.5a3.2 3.2 0 1 0 3.2 4 2.6 2.6 0 1 1-3.2-4z" fill="currentColor" stroke="none"/></svg><span data-t="Today">Today</span></button>
+  <button data-tab="forecast"><svg viewBox="0 0 24 24"><path d="M3 15c3-1 4-6 7-6s3 5 6 5 3-3 5-4"/><path d="M3 18c3-.5 4-3 7-3s3 2.5 6 2.5 3-1.5 5-2" stroke-opacity=".45"/></svg><span data-t="Forecast">Forecast</span></button>
+  <button data-tab="commit"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="3"/><path d="M8 10h8M8 14h5"/></svg><span data-t="Commitments">Commitments</span></button>
+  <button data-tab="accounts"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="13" height="10" rx="2.5"/><rect x="8" y="4" width="13" height="10" rx="2.5"/></svg><span data-t="Accounts">Accounts</span></button>
 </nav>
 
 <div class="scrim" id="scrim"></div>
@@ -276,6 +279,7 @@ nav.tabs button.on svg{color:var(--gold)}
 <div id="toast"></div>
 <input type="file" id="filePick" accept=".json,application/json,*/*" hidden>
 
+<script src="i18n.js"></script>
 <script src="icons/icon.js"></script>
 <script src="store.js"></script>
 <script src="money.js"></script>

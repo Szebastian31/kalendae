@@ -16,6 +16,10 @@ const CURRENCIES = {
   ZAR: ['South African rand', 'en-ZA'], MXN: ['Mexican peso', 'es-MX'], BRL: ['Brazilian real', 'pt-BR'], CLP: ['Chilean peso', 'es-CL'],
   ISK: ['Icelandic króna', 'is-IS'],
 };
+// currency names in the app's language ("Euro", "euro", "Евро"…), from the phone's own dictionary
+let CUR_DN = null;
+try { CUR_DN = new Intl.DisplayNames([LOCALE], { type: 'currency' }); } catch (e) {}
+const curName = c => { try { return (CUR_DN && CUR_DN.of(c)) || CURRENCIES[c][0]; } catch (e) { return (CURRENCIES[c] || [c])[0]; } };
 const NO_DECIMALS = ['JPY', 'HUF', 'KRW', 'IDR', 'CLP', 'ISK'];
 
 // Used until the first successful download (and if NBP can't be reached). Approximate, autumn 2026.
@@ -91,9 +95,9 @@ function rateLine(cur, base = S.settings.display) {
   return `1 ${cur} = ${n} ${base}`;
 }
 function ratesNote() {
-  if (RATES.source !== 'NBP') return 'Using built-in estimates until the first download from the National Bank of Poland.';
-  const d = s => new Date(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-  return `Average of ${RATES.days} NBP tables, ${d(RATES.from)} – ${d(RATES.to)}.`;
+  if (RATES.source !== 'NBP') return t('Using built-in estimates until the first download from the National Bank of Poland.');
+  const d = s => new Date(s).toLocaleDateString(LOCALE, { day: 'numeric', month: 'short' });
+  return t('Average of {n} NBP tables, {from} – {to}.', { n: RATES.days, from: d(RATES.from), to: d(RATES.to) });
 }
 function parseAmount(str) {
   const v = parseFloat(String(str).replace(/\s/g, '').replace(/[^\d,.\-−]/g, '').replace('−', '-').replace(',', '.'));

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- notification channel names, as shown in Android settings -->
+<resources>
+    <string name="ch_upcoming">In arrivo</string>
+    <string name="ch_upcoming_desc">Rinnovi e bollette qualche giorno prima della scadenza</string>
+    <string name="ch_warn">Avvisi</string>
+    <string name="ch_warn_desc">Prove che stanno per diventare a pagamento e conti che rischiano di restare scoperti</string>
+</resources>

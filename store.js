@@ -4,15 +4,15 @@ const STORE_KEY = 'kalendae-state';
 const SCHEMA = 1;
 
 const ACCOUNT_TYPES = {
-  bank:    { label: 'Bank account', group: 'Banks', icon: '<rect x="3" y="9" width="18" height="10" rx="1.5"/><path d="M2 9l10-5 10 5M7 12v4M12 12v4M17 12v4"/>' },
-  savings: { label: 'Savings', group: 'Banks', icon: '<circle cx="12" cy="13" r="7"/><path d="M12 9v8M9.5 11h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/>' },
-  card:    { label: 'Credit card', group: 'Banks', icon: '<rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M3 10h18M7 15h4"/>' },
-  wallet:  { label: 'Wallet app', group: 'Wallets & e-money', icon: '<path d="M8 19l2-14h5a4 4 0 0 1 0 8h-4l-1 6z"/>' },
-  emoney:  { label: 'E-money', group: 'Wallets & e-money', icon: '<circle cx="12" cy="12" r="8"/><path d="M8 12h8M12 8l4 4-4 4"/>' },
-  cash:    { label: 'Cash', group: 'Cash', icon: '<rect x="2.5" y="7" width="19" height="10" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 10v4M18 10v4"/>' },
-  other:   { label: 'Other', group: 'Other', icon: '<circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/>' },
+  bank:    { label: t('Bank account'), group: t('Banks'), icon: '<rect x="3" y="9" width="18" height="10" rx="1.5"/><path d="M2 9l10-5 10 5M7 12v4M12 12v4M17 12v4"/>' },
+  savings: { label: t('Savings'), group: t('Banks'), icon: '<circle cx="12" cy="13" r="7"/><path d="M12 9v8M9.5 11h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/>' },
+  card:    { label: t('Credit card'), group: t('Banks'), icon: '<rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M3 10h18M7 15h4"/>' },
+  wallet:  { label: t('Wallet app'), group: t('Wallets & e-money'), icon: '<path d="M8 19l2-14h5a4 4 0 0 1 0 8h-4l-1 6z"/>' },
+  emoney:  { label: t('E-money'), group: t('Wallets & e-money'), icon: '<circle cx="12" cy="12" r="8"/><path d="M8 12h8M12 8l4 4-4 4"/>' },
+  cash:    { label: t('Cash'), group: t('Cash'), icon: '<rect x="2.5" y="7" width="19" height="10" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 10v4M18 10v4"/>' },
+  other:   { label: t('Other'), group: t('Other'), icon: '<circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/>' },
 };
-const GROUP_ORDER = ['Banks', 'Wallets & e-money', 'Cash', 'Other'];
+const GROUP_ORDER = [t('Banks'), t('Wallets & e-money'), t('Cash'), t('Other')];
 const ACCOUNT_COLORS = 12; // --a1 … --a12 in each look
 
 function freshState() {
@@ -68,7 +68,7 @@ let S = loadState();
 const listeners = [];
 function onChange(fn) { listeners.push(fn); }
 function save() {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { toast('Couldn’t save on this phone'); }
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { toast(t('Couldn’t save on this phone')); }
   listeners.forEach(fn => fn());
 }
 

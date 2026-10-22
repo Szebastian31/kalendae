@@ -49,11 +49,11 @@ window.kalendaeBack = () => {
 };
 
 // a confirmation sheet; resolves true/false
-function confirmSheet(title, text, yes = 'Yes', danger = false) {
+function confirmSheet(title, text, yes = t('Yes'), danger = false) {
   return new Promise(res => {
     let answered = false;
     openSheet(`<h2>${esc(title)}</h2><p class="lead">${text}</p>
-      <div class="row2"><button class="btn ghost" data-a="no">Cancel</button><button class="btn ${danger ? 'danger' : ''}" data-a="yes">${esc(yes)}</button></div>`,
+      <div class="row2"><button class="btn ghost" data-a="no">${t('Cancel')}</button><button class="btn ${danger ? 'danger' : ''}" data-a="yes">${esc(yes)}</button></div>`,
       body => $$('[data-a]', body).forEach(b => b.onclick = () => { answered = true; closeSheet(); res(b.dataset.a === 'yes'); }),
       () => { if (!answered) res(false); });
   });
@@ -65,7 +65,7 @@ function promptSheet(title, text, opts = {}) {
     let done = false;
     openSheet(`<h2>${esc(title)}</h2><p class="lead">${text}</p>
       <input class="input" id="pIn" type="${opts.type || 'text'}" placeholder="${esc(opts.placeholder || '')}" autocomplete="off">
-      <div class="row2"><button class="btn ghost" data-a="no">${esc(opts.cancel || 'Cancel')}</button><button class="btn" data-a="yes">${esc(opts.ok || 'OK')}</button></div>`,
+      <div class="row2"><button class="btn ghost" data-a="no">${esc(opts.cancel || t('Cancel'))}</button><button class="btn" data-a="yes">${esc(opts.ok || t('OK'))}</button></div>`,
       body => {
         const inp = $('#pIn', body);
         setTimeout(() => inp.focus(), 300);
@@ -76,10 +76,10 @@ function promptSheet(title, text, opts = {}) {
 }
 
 function dateLong(d = new Date()) {
-  return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  return d.toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long' });
 }
 function agoText(iso) {
   if (!iso) return '';
   const days = Math.round((new Date(todayISO()) - new Date(iso)) / 864e5);
-  return days <= 0 ? 'today' : days === 1 ? 'yesterday' : days < 7 ? `${days} days ago` : new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  return days <= 0 ? t('today') : days === 1 ? t('yesterday') : days < 7 ? tn(days, '{n} day ago', '{n} days ago') : new Date(iso).toLocaleDateString(LOCALE, { day: 'numeric', month: 'short' });
 }

@@ -4,23 +4,23 @@
 //            start (next date, yyyy-mm-dd), repeat (see REPEATS), trial (sub: start = when the trial ends),
 //            varies (amount is an average), paused, note }
 const KINDS = {
-  income: { one: 'Income', many: 'Income', sign: 1, icon: '<path d="M12 19V5M6 11l6-6 6 6"/>' },
-  bill:   { one: 'Bill', many: 'Bills', sign: -1, icon: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>' },
-  sub:    { one: 'Subscription', many: 'Subscriptions', sign: -1, icon: '<path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>' },
-  move:   { one: 'Move', many: 'Moves between accounts', sign: -1, icon: '<path d="M4 8h14l-3-3M20 16H6l3 3"/>' },
+  income: { one: t('Income'), many: t('Income'), sign: 1, icon: '<path d="M12 19V5M6 11l6-6 6 6"/>' },
+  bill:   { one: t('Bill'), many: t('Bills'), sign: -1, icon: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>' },
+  sub:    { one: t('Subscription'), many: t('Subscriptions'), sign: -1, icon: '<path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>' },
+  move:   { one: t('Move'), many: t('Moves between accounts'), sign: -1, icon: '<path d="M4 8h14l-3-3M20 16H6l3 3"/>' },
 };
 const REPEATS = {
-  week: ['Every week', 'week', 1], week2: ['Every 2 weeks', 'week', 2], week4: ['Every 4 weeks', 'week', 4],
-  month: ['Every month', 'month', 1], month2: ['Every 2 months', 'month', 2], month3: ['Every 3 months', 'month', 3],
-  month6: ['Every 6 months', 'month', 6], year: ['Every year', 'year', 1], once: ['Only once', 'once', 0],
+  week: [t('Every week'), 'week', 1], week2: [t('Every 2 weeks'), 'week', 2], week4: [t('Every 4 weeks'), 'week', 4],
+  month: [t('Every month'), 'month', 1], month2: [t('Every 2 months'), 'month', 2], month3: [t('Every 3 months'), 'month', 3],
+  month6: [t('Every 6 months'), 'month', 6], year: [t('Every year'), 'year', 1], once: [t('Only once'), 'once', 0],
 };
 const HORIZON = 60;
 
 const SUGGEST = {
-  income: ['Salary', 'Freelance', 'Side job', 'Pension', 'Benefits', 'Child benefit (800+)', 'Rent from tenants', 'Allowance', 'Bonus', 'Dividends'],
-  bill: ['Rent', 'Mortgage', 'Electricity', 'Gas', 'Water', 'Heating', 'Internet', 'Phone', 'Insurance', 'Car insurance', 'Home insurance', 'Loan', 'Car loan', 'Credit card', 'Childcare', 'School', 'Council tax', 'Housing fees', 'TV licence', 'Parking'],
-  sub: ['Netflix', 'Spotify', 'YouTube Premium', 'Disney+', 'Max', 'Amazon Prime', 'Apple One', 'Apple Music', 'iCloud+', 'Google One', 'ChatGPT Plus', 'Claude Pro', 'Microsoft 365', 'Adobe Creative Cloud', 'Lightroom', 'Canva Pro', 'Figma', 'Notion', 'Duolingo', 'Xbox Game Pass', 'PlayStation Plus', 'Nintendo Switch Online', 'Audible', 'Kindle Unlimited', 'Tidal', 'Deezer', 'Canal+', 'Player', 'SkyShowtime', 'Gym', 'Patreon', 'Dropbox', 'Proton', 'NordVPN', '1Password', 'Strava', 'Headspace', 'LinkedIn Premium', 'Uber One', 'Bolt Plus'],
-  move: ['To savings', 'To shared account', 'Investing', 'Cash withdrawal', 'Holiday pot', 'Emergency fund', 'Credit card payment'],
+  income: [t('Salary'), t('Freelance'), t('Side job'), t('Pension'), t('Benefits'), t('Child benefit (800+)'), t('Rent from tenants'), t('Allowance'), t('Bonus'), t('Dividends')],
+  bill: [t('Rent'), t('Mortgage'), t('Electricity'), t('Gas'), t('Water'), t('Heating'), t('Internet'), t('Phone'), t('Insurance'), t('Car insurance'), t('Home insurance'), t('Loan'), t('Car loan'), t('Credit card'), t('Childcare'), t('School'), t('Council tax'), t('Housing fees'), t('TV licence'), t('Parking')],
+  sub: ['Netflix', 'Spotify', 'YouTube Premium', 'Disney+', 'Max', 'Amazon Prime', 'Apple One', 'Apple Music', 'iCloud+', 'Google One', 'ChatGPT Plus', 'Claude Pro', 'Microsoft 365', 'Adobe Creative Cloud', 'Lightroom', 'Canva Pro', 'Figma', 'Notion', 'Duolingo', 'Xbox Game Pass', 'PlayStation Plus', 'Nintendo Switch Online', 'Audible', 'Kindle Unlimited', 'Tidal', 'Deezer', 'Canal+', 'Player', 'SkyShowtime', t('Gym'), t('Patreon'), 'Dropbox', 'Proton', 'NordVPN', '1Password', 'Strava', 'Headspace', 'LinkedIn Premium', 'Uber One', 'Bolt Plus'],
+  move: [t('To savings'), t('To shared account'), t('Investing'), t('Cash withdrawal'), t('Holiday pot'), t('Emergency fund'), t('Credit card payment')],
 };
 
 // ---- dates ----
@@ -94,7 +94,7 @@ function forecast(ids, n = HORIZON) {
     const v = conv(it.amount, itemCur(it)) * KINDS[it.kind].sign;
     occurrences(it, n, 0).forEach(k => {
       if (inSrc && !(k === 0 && src.balanceAt >= today)) ev[k].push({ it, a: v * w(src), name: it.name, acct: src });
-      if (inDst && !(k === 0 && dst.balanceAt >= today)) ev[k].push({ it, a: -v * w(dst), name: it.inName || `From ${src.name}`, acct: dst });
+      if (inDst && !(k === 0 && dst.balanceAt >= today)) ev[k].push({ it, a: -v * w(dst), name: it.inName || t('From {a}', { a: src.name }), acct: dst });
     });
   });
   const accts = ids.map(accountById).filter(Boolean);
@@ -166,9 +166,9 @@ function paydayPlan() {
     if (it.kind === 'move') moves[it.name] = (moves[it.name] || 0) + v; else bills += v;
   });
   Object.entries(moves).forEach(([k, v], i) => rows.push({ k, v, c: `var(--a${(i % 4) + 3})` }));
-  if (bills) rows.push({ k: 'Bills & subscriptions', v: bills, c: 'var(--a2)' });
+  if (bills) rows.push({ k: t('Bills & subscriptions'), v: bills, c: 'var(--a2)' });
   const every = dailySpend(a) * (p2 - p1);
-  if (every) rows.push({ k: 'Everyday', v: every, c: 'var(--muted)', s: 'your estimate' });
+  if (every) rows.push({ k: t('Everyday'), v: every, c: 'var(--muted)', s: t('your estimate') });
   const left = income - rows.reduce((s, r) => s + r.v, 0);
   return { acct: a, day: p1, nextDay: p2, income, rows, left };
 }

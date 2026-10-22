@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- notification channel names, as shown in Android settings -->
+<resources>
+    <string name="ch_upcoming">Nadchodzące</string>
+    <string name="ch_upcoming_desc">Odnowienia i rachunki kilka dni przed terminem</string>
+    <string name="ch_warn">Ostrzeżenia</string>
+    <string name="ch_warn_desc">Okresy próbne, które zaraz staną się płatne, i konta, na których może zabraknąć pieniędzy</string>
+</resources>
