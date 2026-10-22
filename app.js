@@ -21,7 +21,7 @@ $('#curPill').onclick = () => {
   if (c.length < 2) { settingsSheet(); return; }
   S.settings.display = c[(c.indexOf(S.settings.display) + 1) % c.length];
   save();
-  toast(`Showing money in ${CURRENCIES[S.settings.display][0].toLowerCase()}`);
+  toast(t('Showing money in {c}', { c: curName(S.settings.display) }));
 };
 $('#openSettings').onclick = settingsSheet;
 
@@ -46,6 +46,7 @@ window.kalendaeResume = () => {
   refreshRates().then(changed => { if (changed) renderAll(); });
 };
 
+translateStatic(); // tab names and labels in index.html, in your language
 renderAll();
 syncNotifConfig();
 syncNotifEvents();

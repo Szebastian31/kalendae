@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- notification channel names, as shown in Android settings -->
+<resources>
+    <string name="ch_upcoming">即将到来</string>
+    <string name="ch_upcoming_desc">续订和账单到期前几天提醒</string>
+    <string name="ch_warn">警告</string>
+    <string name="ch_warn_desc">即将转为付费的试用，以及余额可能不足的账户</string>
+</resources>

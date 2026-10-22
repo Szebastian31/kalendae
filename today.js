@@ -28,7 +28,7 @@ function ringSvg(votes, size = 92, color) {
   if (big) {
     s += `<circle cx="${C}" cy="${C}" r="${r - sw / 2 - 5}" fill="url(#${u}c)" stroke="var(--line)" stroke-width="1"/>
       <text x="${C}" y="${C + size * .07}" text-anchor="middle" font-family="var(--serif)" font-size="${size * .28}" fill="url(#${u})">${votes.filter(Boolean).length}<tspan font-size="${size * .14}" fill="var(--muted)">/${n}</tspan></text>
-      <text x="${C}" y="${C + size * .23}" text-anchor="middle" font-size="${size * .085}" font-weight="700" letter-spacing="1.4" fill="var(--muted)">AGREE</text>`;
+      <text x="${C}" y="${C + size * .23}" text-anchor="middle" font-size="${size * .085}" font-weight="700" letter-spacing="1.4" fill="var(--muted)">${esc(t('AGREE'))}</text>`;
   }
   return s + '</svg>';
 }
@@ -59,7 +59,7 @@ function drawOrbit(svgEl, center, safe) {
   }
   [7, 14, 21].forEach(t => {
     const [x, y] = pt(t, 168);
-    el('text', { x, y: y + 3, 'text-anchor': 'middle', 'font-size': 9.5, fill: 'var(--muted)', 'font-family': 'var(--sans)' }, svgEl).textContent = dateIn(t).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    el('text', { x, y: y + 3, 'text-anchor': 'middle', 'font-size': 9.5, fill: 'var(--muted)', 'font-family': 'var(--sans)' }, svgEl).textContent = dateIn(t).toLocaleDateString(LOCALE, { day: 'numeric', month: 'short' });
   });
   el('path', { d: `M${C - 5} 4 L${C + 5} 4 L${C} 12 Z`, fill: 'var(--ink)' }, svgEl);
   if (safe && safe.payT && safe.payT < ORBIT_N) {
@@ -70,7 +70,7 @@ function drawOrbit(svgEl, center, safe) {
     const [x, y] = pt(m.t, 152);
     const g = el('g', {}, svgEl);
     el('circle', { cx: x, cy: y, r: 5.5, fill: m.type === 'full' ? 'var(--gold)' : 'var(--solid)', stroke: 'var(--gold)', 'stroke-width': 1.4 }, g);
-    el('title', {}, g).textContent = (m.type === 'full' ? 'Full moon · ' : 'New moon · ') + dateIn(m.t).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    el('title', {}, g).textContent = (m.type === 'full' ? t('Full moon') : t('New moon')) + ' · ' + dfmt(dateIn(m.t), { day: 'numeric', month: 'short' });
   });
   orbitGroups().forEach(g => {
     const total = g.items.reduce((s, it) => s + Math.abs(conv(it.amount, itemCur(it), 'PLN')), 0);
@@ -97,14 +97,14 @@ function drawCenter(c, safe) {
         const v = it.amount * KINDS[it.kind].sign;
         return `<div class="row"><span>${esc(it.name)}</span><b class="num ${v > 0 ? 'pos' : ''}">${v > 0 ? '+' : ''}${fmt(v, itemCur(it))}</b></div>`;
       }).join('');
-      c.innerHTML = `<div class="k">${dateIn(g.k).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</div><div class="sub" style="margin:3px 0 8px">${inDaysText(g.k)}</div>${rows}`;
+      c.innerHTML = `<div class="k">${dateIn(g.k).toLocaleDateString(LOCALE, { weekday: 'short', day: 'numeric', month: 'short' })}</div><div class="sub" style="margin:3px 0 8px">${inDaysText(g.k)}</div>${rows}`;
       return;
     }
     orbitSel = null;
   }
   if (!safe) { c.innerHTML = ''; return; }
-  c.innerHTML = `<div class="k">Safe to spend</div><div class="big num" style="color:${safe.safe < 0 ? 'var(--warn)' : 'inherit'}">${fmt(safe.safe)}</div>
-    <div class="sub">${safe.noIncome ? 'next 30 days' : `until payday · ${dateIn(safe.payT).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}<br>${safe.safe > 0 ? `≈ ${fmt(safe.perDay)} a day` : 'after what’s planned'}</div>`;
+  c.innerHTML = `<div class="k">${t('Safe to spend')}</div><div class="big num" style="color:${safe.safe < 0 ? 'var(--warn)' : 'inherit'}">${fmt(safe.safe)}</div>
+    <div class="sub">${safe.noIncome ? t('next 30 days') : t('until payday · {d}', { d: dfmt(dateIn(safe.payT), { day: 'numeric', month: 'short' }) })}<br>${safe.safe > 0 ? t('≈ {v} a day', { v: fmt(safe.perDay) }) : t('after what’s planned')}</div>`;
 }
 
 function renderToday() {
@@ -112,61 +112,64 @@ function renderToday() {
   const accts = liveAccounts();
   if (!accts.length) {
     v.innerHTML = `<div class="card soon"><div style="width:110px;margin:0 auto">${iconSVG({ size: 110 })}</div>
-      <div class="big">A forecast for your money</div>
-      <p class="sub">Start with your accounts, then your income, bills and subscriptions. Kalendae shows what's safe to spend until payday.</p>
-      <button class="btn wide" style="margin-top:18px" id="goAccts">Add your accounts</button></div>`;
+      <div class="big">${t('A forecast for your money')}</div>
+      <p class="sub">${t('Start with your accounts, then your income, bills and subscriptions. Kalendae shows what’s safe to spend until payday.')}</p>
+      <button class="btn wide" style="margin-top:18px" id="goAccts">${t('Add your accounts')}</button></div>`;
     $('#goAccts').onclick = () => { showTab('accounts'); accountSheet(); };
     return;
   }
   const safe = safeToSpend();
   const items = liveItems();
+  const short = d => dfmt(d, { day: 'numeric', month: 'short' });
   let html = `<div class="orbitWrap"><svg id="orbit" viewBox="0 0 340 340" preserveAspectRatio="xMidYMid meet"></svg><div class="orbitCenter" id="orbitCenter"></div></div>
-    <div class="legend"><span><span class="dot" style="background:var(--gold)"></span>Money in & moves</span><span>Middle: monthly</span><span>Outer: other & trials</span></div>`;
+    <div class="legend"><span><span class="dot" style="background:var(--gold)"></span>${t('Money in & moves')}</span><span>${t('Middle: monthly')}</span><span>${t('Outer: other & trials')}</span></div>`;
 
-  if (!items.length) html += `<div class="card"><h3>Next: what comes and goes</h3><p class="sub">Add your salary, bills and subscriptions so the orbit fills up and “safe to spend” knows what's coming.</p>
-    <button class="btn wide" style="margin-top:12px" id="tAdd">Add income or a bill</button></div>`;
+  if (!items.length) html += `<div class="card"><h3>${t('Next: what comes and goes')}</h3><p class="sub">${t('Add your salary, bills and subscriptions so the orbit fills up and “safe to spend” knows what’s coming.')}</p>
+    <button class="btn wide" style="margin-top:12px" id="tAdd">${t('Add income or a bill')}</button></div>`;
 
   const due = checkinDue();
   if (due.length) html += `<div class="card ciCard"><div class="wt">${svg('<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>')}
-    <div><b>Time for a check-in</b><br>${due.length === 1 ? `${esc(due[0].name)} was last updated ${agoText(due[0].balanceAt)}` : `${due.length} balances are a week old or more`}. Type what's in them now and Kalendae learns your everyday spending.</div></div>
-    <div class="row2"><button class="btn" id="tCheck">Check in</button></div></div>`;
+    <div><b>${t('Time for a check-in')}</b><br>${due.length === 1 ? t('{a} was last updated {ago}.', { a: esc(due[0].name), ago: agoText(due[0].balanceAt) }) : t('{n} balances are a week old or more.', { n: due.length })} ${t('Type what’s in them now and Kalendae learns your everyday spending.')}</div></div>
+    <div class="row2"><button class="btn" id="tCheck">${t('Check in')}</button></div></div>`;
 
   warnings().slice(0, 2).forEach(w => {
     const a = w.acct;
     html += `<div class="card warn"><div class="wt">${svg('<path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17.5v.5"/>')}
-      <div><b>${esc(a.name)} runs short around ${w.first.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</b><br>
-      Lowest point ${fmt(w.low.mid)} on ${w.low.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}${w.payT && w.payT > w.first.t ? ', before money next arrives' : ''}.${a.shared && a.partner ? ` Worth telling ${esc(a.partner)}.` : ''}</div></div>
-      <div class="row2"><button class="btn ghost" data-fix="${a.id}">Plan a top-up</button></div></div>`;
+      <div><b>${t('{a} runs short around {d}', { a: esc(a.name), d: short(w.first.date) })}</b><br>
+      ${w.payT && w.payT > w.first.t ? t('Lowest point {v} on {d}, before money next arrives.', { v: fmt(w.low.mid), d: short(w.low.date) }) : t('Lowest point {v} on {d}.', { v: fmt(w.low.mid), d: short(w.low.date) })}${a.shared && a.partner ? ' ' + t('Worth telling {name}.', { name: esc(a.partner) }) : ''}</div></div>
+      <div class="row2"><button class="btn ghost" data-fix="${a.id}">${t('Plan a top-up')}</button></div></div>`;
   });
 
   if (safe) {
+    const nonIncome = items.filter(it => it.kind !== 'income').length;
     const sig = [
-      [!safe.noIncome, safe.noIncome ? `No income dated in ${esc(safe.acct.name)}` : 'Income is dated'],
-      [items.some(it => it.kind !== 'income'), items.some(it => it.kind !== 'income') ? `${items.filter(it => it.kind !== 'income').length} commitments have dates` : 'No bills or subscriptions yet'],
-      [safe.acct.balanceAt && (new Date(todayISO()) - new Date(safe.acct.balanceAt)) / 864e5 <= 7, `Balance updated ${agoText(safe.acct.balanceAt)}`],
-      [!!safe.acct.everyday, safe.acct.everyday ? 'Everyday spending is set' : 'Everyday spending not set'],
+      [!safe.noIncome, safe.noIncome ? t('No income dated in {a}', { a: esc(safe.acct.name) }) : t('Income is dated')],
+      [nonIncome > 0, nonIncome ? tn(nonIncome, '{n} commitment has a date', '{n} commitments have dates') : t('No bills or subscriptions yet')],
+      [safe.acct.balanceAt && (new Date(todayISO()) - new Date(safe.acct.balanceAt)) / 864e5 <= 7, t('Balance updated {ago}', { ago: agoText(safe.acct.balanceAt) })],
+      [!!safe.acct.everyday, safe.acct.everyday ? t('Everyday spending is set') : t('Everyday spending not set')],
     ];
     const agree = sig.filter(s => s[0]).length;
-    html += `<div class="card" id="safeCard"><h3>How sure is “safe to spend”? <em>${['Rough guess', 'Rough guess', 'Fairly sure', 'Fairly sure', 'Sure'][agree]}</em></h3>
+    const sure = [t('Rough guess'), t('Rough guess'), t('Fairly sure'), t('Fairly sure'), t('Sure')][agree];
+    html += `<div class="card" id="safeCard"><h3>${t('How sure is “safe to spend”?')} <em>${sure}</em></h3>
       <div class="agree">${ringSvg(sig.map(s => s[0]))}<ul>${sig.map(s => `<li class="${s[0] ? 'y' : 'n'}"><i>${s[0] ? '✓' : '~'}</i>${s[1]}</li>`).join('')}</ul></div>
-      <p class="sub" style="margin-top:10px">${safe.acct.everyday && safe.fun > 0 ? `At your usual everyday spending you'd still have <b class="num">${fmt(safe.fun)}</b> spare for fun.` : ''}
-      Counted from <b>${esc(safe.acct.name)}</b>${S.settings.floor ? `, keeping ${fmt(S.settings.floor, safe.acct.cur)} untouched` : ''}. <a href="#" id="safeSet" class="link">Change</a></p></div>`;
+      <p class="sub" style="margin-top:10px">${safe.acct.everyday && safe.fun > 0 ? t('At your usual everyday spending you’d still have {v} spare for fun.', { v: `<b class="num">${fmt(safe.fun)}</b>` }) : ''}
+      ${S.settings.floor ? t('Counted from {a}, keeping {v} untouched.', { a: `<b>${esc(safe.acct.name)}</b>`, v: fmt(S.settings.floor, safe.acct.cur) }) : t('Counted from {a}.', { a: `<b>${esc(safe.acct.name)}</b>` })} <a href="#" id="safeSet" class="link">${t('Change')}</a></p></div>`;
   }
 
   const plan = paydayPlan();
   if (plan && plan.income > 0) {
     const total = plan.rows.reduce((s, r) => s + r.v, 0) + Math.max(0, plan.left);
-    html += `<div class="card"><h3>Payday plan · ${dateIn(plan.day).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} <em class="num">${fmt(plan.income)}</em></h3>
+    html += `<div class="card"><h3>${t('Payday plan · {d}', { d: short(dateIn(plan.day)) })} <em class="num">${fmt(plan.income)}</em></h3>
       <div class="planbar">${plan.rows.map(r => `<div style="flex:${r.v / total};background:${r.c}"></div>`).join('')}${plan.left > 0 ? `<div style="flex:${plan.left / total};background:var(--gold)"></div>` : ''}</div>
       <div class="planlist">${plan.rows.map(r => `<div class="l"><span class="dot" style="background:${r.c}"></span><span>${esc(r.k)}${r.s ? `<small>${r.s}</small>` : ''}</span></div><div class="num">${fmt(r.v)}</div>`).join('')}
-      <div class="l"><span class="dot" style="background:var(--gold)"></span><span><b>${plan.left >= 0 ? 'Free' : 'Short'}</b><small>${plan.left >= 0 ? 'yours to spend, save or invest' : 'more is planned than comes in'}</small></span></div><div class="num" style="color:${plan.left < 0 ? 'var(--warn)' : 'inherit'}"><b>${fmt(plan.left)}</b></div></div></div>`;
+      <div class="l"><span class="dot" style="background:var(--gold)"></span><span><b>${plan.left >= 0 ? t('Free') : t('Short')}</b><small>${plan.left >= 0 ? t('yours to spend, save or invest') : t('more is planned than comes in')}</small></span></div><div class="num" style="color:${plan.left < 0 ? 'var(--warn)' : 'inherit'}"><b>${fmt(plan.left)}</b></div></div></div>`;
   }
 
   const next = upcoming(14).slice(0, 7);
-  if (next.length) html += `<div class="card"><h3>Next up <em>every account</em></h3><ul class="list">${next.map(({ k, it }) => {
+  if (next.length) html += `<div class="card"><h3>${t('Next up')} <em>${t('every account')}</em></h3><ul class="list">${next.map(({ k, it }) => {
     const d = dateIn(k), a = accountById(it.acct), sign = KINDS[it.kind].sign, b = fmtBoth(it.amount * sign, itemCur(it));
-    return `<li class="it" data-id="${it.id}"><div class="when">${d.toLocaleDateString('en-GB', { month: 'short' })}<b>${d.getDate()}</b></div>
-      <div><div class="nm">${esc(it.name)}${isTrialNow(it) && k === nextIn(it) ? ' · trial ends' : ''}</div><div class="meta"><span class="dot" style="background:${accColor(a)}"></span>${esc(a.name)} · ${inDaysText(k)}</div></div>
+    return `<li class="it" data-id="${it.id}"><div class="when">${dfmt(d, { month: 'short' })}<b>${d.getDate()}</b></div>
+      <div><div class="nm">${esc(it.name)}${isTrialNow(it) && k === nextIn(it) ? ' · ' + t('trial ends') : ''}</div><div class="meta"><span class="dot" style="background:${accColor(a)}"></span>${esc(a.name)} · ${inDaysText(k)}</div></div>
       <div class="amt num ${sign > 0 ? 'pos' : ''}">${sign > 0 ? '+' : ''}${b.main}${b.approx ? `<small>${b.approx}</small>` : ''}</div></li>`;
   }).join('')}</ul></div>`;
 
@@ -179,25 +182,25 @@ function renderToday() {
   $$('[data-fix]', v).forEach(b => b.onclick = () => {
     const a = accountById(b.dataset.fix);
     const from = liveAccounts().find(x => x.id !== a.id && x.type === 'savings') || liveAccounts().find(x => x.id !== a.id && x.type !== 'card');
-    if (!from) { toast('Add another account to move money from'); return; }
+    if (!from) { toast(t('Add another account to move money from')); return; }
     const w = warnings().find(w => w.acct.id === a.id);
     const need = Math.ceil(conv(w.floor - w.low.mid, S.settings.display, from.cur) / 50) * 50 + 50;
-    itemSheet(null, 'move', { id: uid(), kind: 'move', name: `Top up ${a.name}`, amount: need, acct: from.id, to: a.id, cur: from.cur,
-      start: isoDay(addDays(w.first.date, -1)), repeat: 'once', trial: false, varies: false, paused: false }, 'Plan a top-up');
+    itemSheet(null, 'move', { id: uid(), kind: 'move', name: t('Top up {a}', { a: a.name }), amount: need, acct: from.id, to: a.id, cur: from.cur,
+      start: isoDay(addDays(w.first.date, -1)), repeat: 'once', trial: false, varies: false, paused: false }, t('Plan a top-up'));
   });
 }
 
 function safeSettingsSheet() {
   const a = mainAccount();
-  openSheet(`<h2>Safe to spend</h2><p class="lead">Which account do you spend from day to day? Kalendae counts what's left in it until your next income arrives.</p>
-    <div class="field"><label>Spending account</label><div class="chips" id="mA">${liveAccounts().filter(x => x.type !== 'card').map(x =>
+  openSheet(`<h2>${t('Safe to spend')}</h2><p class="lead">${t('Which account do you spend from day to day? Kalendae counts what’s left in it until your next income arrives.')}</p>
+    <div class="field"><label>${t('Spending account')}</label><div class="chips" id="mA">${liveAccounts().filter(x => x.type !== 'card').map(x =>
       `<button class="chip ${x.id === a.id ? 'on' : ''}" data-a="${x.id}"><span class="dot" style="background:${accColor(x)}"></span>${esc(x.name)}</button>`).join('')}</div></div>
-    <div class="field"><label>Always keep at least</label><div style="display:flex;gap:8px;align-items:center"><input class="input money num" id="mF" inputmode="decimal" value="${S.settings.floor || ''}" placeholder="0" style="flex:1"><span class="sub" id="mC">${a.cur}</span></div>
-      <p class="sub" style="margin-top:6px">A cushion that “safe to spend” never touches. You'll get a warning if the forecast dips below it.</p></div>
-    <div class="row2"><button class="btn ghost" id="mX">Cancel</button><button class="btn" id="mS">Save</button></div>`, body => {
+    <div class="field"><label>${t('Always keep at least')}</label><div style="display:flex;gap:8px;align-items:center"><input class="input money num" id="mF" inputmode="decimal" value="${S.settings.floor || ''}" placeholder="0" style="flex:1"><span class="sub" id="mC">${a.cur}</span></div>
+      <p class="sub" style="margin-top:6px">${t('A cushion that “safe to spend” never touches. You’ll get a warning if the forecast dips below it.')}</p></div>
+    <div class="row2"><button class="btn ghost" id="mX">${t('Cancel')}</button><button class="btn" id="mS">${t('Save')}</button></div>`, body => {
     let pick = a.id;
     $$('#mA button', body).forEach(b => b.onclick = () => { pick = b.dataset.a; $$('#mA button', body).forEach(x => x.classList.toggle('on', x === b)); $('#mC', body).textContent = accountById(pick).cur; });
     $('#mX', body).onclick = closeSheet;
-    $('#mS', body).onclick = () => { S.settings.mainAcct = pick; S.settings.floor = Math.abs(parseAmount($('#mF', body).value) || 0); save(); closeSheet(); toast('Saved'); };
+    $('#mS', body).onclick = () => { S.settings.mainAcct = pick; S.settings.floor = Math.abs(parseAmount($('#mF', body).value) || 0); save(); closeSheet(); toast(t('Saved')); };
   });
 }

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- notification channel names, as shown in Android settings -->
+<resources>
+    <string name="ch_upcoming">まもなく</string>
+    <string name="ch_upcoming_desc">更新や請求の数日前にお知らせ</string>
+    <string name="ch_warn">警告</string>
+    <string name="ch_warn_desc">まもなく有料になるお試し期間と、残高が足りなくなりそうな口座</string>
+</resources>

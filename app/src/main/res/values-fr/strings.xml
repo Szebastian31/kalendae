@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- notification channel names, as shown in Android settings -->
+<resources>
+    <string name="ch_upcoming">À venir</string>
+    <string name="ch_upcoming_desc">Renouvellements et factures quelques jours avant l\'échéance</string>
+    <string name="ch_warn">Alertes</string>
+    <string name="ch_warn_desc">Essais sur le point de devenir payants et comptes qui risquent d\'être à court</string>
+</resources>

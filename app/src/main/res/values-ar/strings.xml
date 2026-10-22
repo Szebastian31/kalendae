@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- notification channel names, as shown in Android settings -->
+<resources>
+    <string name="ch_upcoming">قريبًا</string>
+    <string name="ch_upcoming_desc">التجديدات والفواتير قبل موعدها ببضعة أيام</string>
+    <string name="ch_warn">تحذيرات</string>
+    <string name="ch_warn_desc">فترات تجريبية على وشك أن تصبح مدفوعة، وحسابات قد ينقص رصيدها</string>
+</resources>

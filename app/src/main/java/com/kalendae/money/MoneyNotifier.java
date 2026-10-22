@@ -81,11 +81,11 @@ public class MoneyNotifier extends BroadcastReceiver {
 
     public static void createChannels(Context c) {
         NotificationManager nm = c.getSystemService(NotificationManager.class);
-        NotificationChannel up = new NotificationChannel(CH_UPCOMING, "Coming up", NotificationManager.IMPORTANCE_DEFAULT);
-        up.setDescription("Renewals and bills a few days before they're due");
+        NotificationChannel up = new NotificationChannel(CH_UPCOMING, c.getString(R.string.ch_upcoming), NotificationManager.IMPORTANCE_DEFAULT);
+        up.setDescription(c.getString(R.string.ch_upcoming_desc));
         nm.createNotificationChannel(up);
-        NotificationChannel w = new NotificationChannel(CH_WARN, "Warnings", NotificationManager.IMPORTANCE_HIGH);
-        w.setDescription("Trials about to turn paid, and accounts about to run short");
+        NotificationChannel w = new NotificationChannel(CH_WARN, c.getString(R.string.ch_warn), NotificationManager.IMPORTANCE_HIGH);
+        w.setDescription(c.getString(R.string.ch_warn_desc));
         nm.createNotificationChannel(w);
     }
 

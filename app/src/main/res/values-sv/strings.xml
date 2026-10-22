@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- notification channel names, as shown in Android settings -->
+<resources>
+    <string name="ch_upcoming">Kommande</string>
+    <string name="ch_upcoming_desc">Förnyelser och räkningar några dagar innan förfallodagen</string>
+    <string name="ch_warn">Varningar</string>
+    <string name="ch_warn_desc">Provperioder som snart blir betalda och konton som riskerar att ta slut</string>
+</resources>

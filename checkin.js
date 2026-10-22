@@ -61,25 +61,25 @@ function checkinSheet(onlyId) {
     const notes = a.type === 'cash' && NOTES[a.cur];
     return `<div class="ci" data-id="${a.id}">
       <div class="ci-h"><span class="sw sm" style="background:${accColor(a)}">${svg(ACCOUNT_TYPES[a.type].icon)}</span>
-        <div><b>${esc(a.name)}</b><div class="meta">${e.days ? `last ${agoText(a.balanceAt)} · expected ≈ ${fmt(e.v, a.cur)}` : 'checked today'}</div></div>
-        ${due.has(a.id) ? '<span class="tag">Due</span>' : ''}</div>
+        <div><b>${esc(a.name)}</b><div class="meta">${e.days ? t('last {ago} · expected ≈ {v}', { ago: agoText(a.balanceAt), v: fmt(e.v, a.cur) }) : t('checked today')}</div></div>
+        ${due.has(a.id) ? `<span class="tag">${t('Due')}</span>` : ''}</div>
       ${notes ? `<div class="notes">${notes.map(n => `<label>${fmt(n, a.cur)} ×<input class="num" data-n="${n}" inputmode="numeric" placeholder="0"></label>`).join('')}
-          <label>Coins<input class="num" data-n="coins" inputmode="decimal" placeholder="0"></label></div>
+          <label>${t('Coins')}<input class="num" data-n="coins" inputmode="decimal" placeholder="0"></label></div>
         <div class="sub cashTotal"></div>`
-        : `<input class="input money num" inputmode="decimal" placeholder="${a.type === 'card' ? 'Owed now' : 'Balance now'}" data-bal>`}
+        : `<input class="input money num" inputmode="decimal" placeholder="${a.type === 'card' ? t('Owed now') : t('Balance now')}" data-bal>`}
     </div>`;
   }).join('');
-  openSheet(`<h2>${onlyId ? 'Check in' : 'Weekly check-in'}</h2>
-    <p class="lead">Type what's in each account right now. Leave any you didn't check empty. Kalendae works out the everyday spending in between.</p>
+  openSheet(`<h2>${onlyId ? t('Check in') : t('Weekly check-in')}</h2>
+    <p class="lead">${t('Type what’s in each account right now. Leave any you didn’t check empty. Kalendae works out the everyday spending in between.')}</p>
     ${rows}
-    <div class="row2"><button class="btn ghost" id="ciX">Later</button><button class="btn" id="ciS">Save</button></div>`, body => {
+    <div class="row2"><button class="btn ghost" id="ciX">${t('Later')}</button><button class="btn" id="ciS">${t('Save')}</button></div>`, body => {
     $$('.ci', body).forEach(box => {
       const ins = $$('[data-n]', box);
       if (!ins.length) return;
       const upd = () => {
-        const t = ins.reduce((s, i) => s + (parseAmount(i.value) || 0) * (i.dataset.n === 'coins' ? 1 : +i.dataset.n), 0);
-        box.dataset.total = ins.some(i => i.value.trim()) ? t : '';
-        $('.cashTotal', box).textContent = box.dataset.total !== '' ? `Counted ${fmt(t, accountById(box.dataset.id).cur)}` : '';
+        const tot = ins.reduce((s, i) => s + (parseAmount(i.value) || 0) * (i.dataset.n === 'coins' ? 1 : +i.dataset.n), 0);
+        box.dataset.total = ins.some(i => i.value.trim()) ? tot : '';
+        $('.cashTotal', box).textContent = box.dataset.total !== '' ? t('Counted {v}', { v: fmt(tot, accountById(box.dataset.id).cur) }) : '';
       };
       ins.forEach(i => i.oninput = upd);
     });
@@ -93,7 +93,7 @@ function checkinSheet(onlyId) {
         if (v == null) return;
         results.push(applyCheckin(a, v));
       });
-      if (!results.length) { toast('Type at least one balance'); return; }
+      if (!results.length) { toast(t('Type at least one balance')); return; }
       save(); tick('18,40,18');
       checkinResult(results);
     };
@@ -102,14 +102,17 @@ function checkinSheet(onlyId) {
 
 function checkinResult(results) {
   const lines = results.map(r => {
-    const a = r.a;
-    if (!r.days) return `<li><b>${esc(a.name)}</b> updated.</li>`;
-    if (r.spent < -0.5) return `<li><b>${esc(a.name)}</b>: ${fmt(-r.spent, a.cur)} more than expected. Money came in that Kalendae doesn't know about. If it repeats, add it as income.</li>`;
+    const a = r.a, name = `<b>${esc(a.name)}</b>`;
+    if (!r.days) return `<li>${t('{a} updated.', { a: name })}</li>`;
+    if (r.spent < -0.5) return `<li>${t('{a}: {v} more than expected. Money came in that Kalendae doesn’t know about. If it repeats, add it as income.', { a: name, v: fmt(-r.spent, a.cur) })}</li>`;
     const usual = r.before ? r.before / 30.44 : null;
-    const vs = !usual ? '' : r.perDay > usual * 1.2 ? ', <b>above</b> your usual' : r.perDay < usual * .8 ? ', <b>below</b> your usual' : ', close to your usual';
-    return `<li><b>${esc(a.name)}</b>: ${fmt(r.spent, a.cur)} went on everyday things in ${r.days} day${r.days > 1 ? 's' : ''}, about ${fmt(r.perDay, a.cur)} a day${vs}.</li>`;
+    const vs = !usual ? '' : r.perDay > usual * 1.2 ? t('above your usual') : r.perDay < usual * .8 ? t('below your usual') : t('close to your usual');
+    const vars = { a: name, v: fmt(r.spent, a.cur), d: fmt(r.perDay, a.cur), vs: `<b>${vs}</b>` };
+    return `<li>${vs ? tn(r.days, '{a}: {v} went on everyday things in {n} day, about {d} a day, {vs}.', '{a}: {v} went on everyday things in {n} days, about {d} a day, {vs}.', vars)
+                     : tn(r.days, '{a}: {v} went on everyday things in {n} day, about {d} a day.', '{a}: {v} went on everyday things in {n} days, about {d} a day.', vars)}</li>`;
   }).join('');
-  openSheet(`<h2>Checked in</h2><ul class="cires">${lines}</ul>
-    <p class="sub" style="margin-top:12px">Kalendae now expects about <b>${results.filter(r => r.a.everyday).map(r => `${fmt(r.a.everyday, r.a.cur)} a month from ${esc(r.a.name)}`).join(', ') || 'what you set'}</b> in everyday spending. The forecast's range narrows as you check in each week.</p>
-    <button class="btn wide" style="margin-top:14px" id="ciOk">Done</button>`, body => $('#ciOk', body).onclick = closeSheet);
+  const learned = results.filter(r => r.a.everyday).map(r => t('{v} a month from {a}', { v: fmt(r.a.everyday, r.a.cur), a: esc(r.a.name) })).join(', ');
+  openSheet(`<h2>${t('Checked in')}</h2><ul class="cires">${lines}</ul>
+    <p class="sub" style="margin-top:12px">${t('Kalendae now expects about {v} in everyday spending. The forecast’s range narrows as you check in each week.', { v: `<b>${learned || t('what you set')}</b>` })}</p>
+    <button class="btn wide" style="margin-top:14px" id="ciOk">${t('Done')}</button>`, body => $('#ciOk', body).onclick = closeSheet);
 }
