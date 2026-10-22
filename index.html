@@ -107,6 +107,75 @@ header.top .date{font-size:11px;font-weight:700;letter-spacing:1.4px;text-transf
 .soon{text-align:center;padding:40px 10px}
 .soon .big{font-size:30px;margin:16px 0 8px}
 
+/* 12 account colours per look (a1–a6 are set above) */
+:root{--a7:#ffb27a;--a8:#f48fd8;--a9:#9ec5ff;--a10:#c8e66b;--a11:#ff7f7f;--a12:#d9d4c7}
+[data-look=dawn]{--a7:#ffc49a;--a8:#f7a6e0;--a9:#b8d4ff;--a10:#d4ec8a;--a11:#ff9a9a;--a12:#e8e2d6}
+[data-look=paper]{--a7:#c96a2b;--a8:#a8408f;--a9:#4a7fc9;--a10:#6f8f1f;--a11:#b83a3a;--a12:#6e675a}
+.swatches{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.swatches button{aspect-ratio:1;border-radius:50%;border:0;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);transition:transform .15s}
+.swatches button.on{box-shadow:0 0 0 2px var(--sky-top),0 0 0 4px var(--ink);transform:scale(.9)}
+
+.link{color:var(--gold);text-decoration:none;font-weight:600}
+.kindgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.kindgrid button{border:1px solid transparent;background:var(--glass) padding-box,var(--edge) border-box;border-radius:16px;padding:12px 4px;font-size:11.5px;color:var(--ink2);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px}
+.kindgrid button svg{stroke:var(--gold)}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.card > .stats:first-child{margin-top:0}
+.stat{background:var(--tile);border-radius:16px;padding:10px 11px;min-width:0}
+.stat .k{font-size:9.5px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted)}
+.stat .v{font-family:var(--serif);font-size:19px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat .s{font-size:11px;color:var(--ink2);margin-top:2px;line-height:1.35}
+
+.list{list-style:none}
+.list li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:11px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.list li:first-child{border-top:0}
+.list .it{cursor:pointer}
+.list .when{width:40px;text-align:center;font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;line-height:1.1}
+.list .when b{display:block;font-family:var(--serif);font-size:19px;color:var(--ink);letter-spacing:0;font-weight:400}
+.list .nm{font-size:14.5px}
+.list .meta{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:5px;margin-top:2px;flex-wrap:wrap}
+.list .amt{font-size:14.5px;text-align:right;white-space:nowrap}
+.list .amt small{display:block;font-size:11px;color:var(--muted)}
+.pos{color:var(--good)}
+
+.orbitWrap{position:relative;width:100%;height:min(86vw,360px);margin-top:4px}
+.orbitWrap svg{position:absolute;inset:0;width:100%;height:100%}
+.orbitCenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:44%;max-width:170px;text-align:center}
+.orbitCenter .k{font-size:9.5px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted)}
+.orbitCenter .big{font-size:clamp(26px,8.5vw,36px);margin:7px 0 5px}
+.orbitCenter .row{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;padding:2px 0;color:var(--ink2);text-align:left}
+.orbitCenter .row b{color:var(--ink);white-space:nowrap}
+.legend{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;font-size:10.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+
+.warn{background:linear-gradient(160deg,color-mix(in srgb,var(--warn) 18%,transparent),color-mix(in srgb,var(--warn) 6%,transparent)) padding-box,var(--edge) border-box}
+.wt{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.45}
+.wt svg{color:var(--warn);flex:none;margin-top:2px}
+.trial{background:linear-gradient(135deg,color-mix(in srgb,var(--a4) 22%,transparent),transparent 70%) padding-box,var(--edge) border-box;cursor:default}
+
+.agree{display:flex;gap:14px;align-items:center}
+.agree ul{list-style:none;font-size:12.5px;line-height:1.4;min-width:0}
+.agree li{display:flex;gap:7px;padding:3px 0;color:var(--ink2)}
+.agree li i{font-style:normal;width:14px;flex:none;text-align:center}
+.agree li.y i{color:var(--good)}.agree li.n i{color:var(--warn)}
+
+.planbar{display:flex;gap:2px;height:12px;border-radius:6px;overflow:hidden;margin:4px 0 14px}
+.planlist{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 10px;font-size:13.5px}
+.planlist .l{display:flex;align-items:flex-start;gap:8px;color:var(--ink2)}
+.planlist .l .dot{margin-top:6px}
+.planlist small{display:block;font-size:11px;color:var(--muted)}
+.planlist .num{text-align:right}
+
+.chartWrap{position:relative;width:100%;height:clamp(200px,32vh,260px);overflow:hidden}
+.chartWrap svg{position:absolute;inset:0}
+.tip{position:absolute;top:6px;pointer-events:none;background:var(--ink);color:var(--onInk);font-size:11.5px;line-height:1.45;padding:8px 10px;border-radius:11px;opacity:0;transition:opacity .15s;width:178px;z-index:2}
+.fkeys{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
+.fkeys span{display:inline-flex;align-items:center;gap:6px}
+.fkeys i{display:inline-block;width:16px;height:2px;border-radius:1px}
+.fkeys i.band{height:9px;width:13px;border-radius:3px;background:var(--ink);opacity:.18}
+.fkeys i.dash{background:repeating-linear-gradient(90deg,var(--muted) 0 3px,transparent 3px 6px)}
+.fkeys i.pay{width:7px;height:7px;border-radius:50%;background:var(--gold)}
+
 /* tab bar */
 nav.tabs{position:fixed;left:14px;right:14px;bottom:calc(env(safe-area-inset-bottom) + 14px);max-width:452px;margin:0 auto;height:64px;padding:6px;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;border-radius:24px;z-index:20;
   background:color-mix(in srgb,var(--solid) 78%,transparent) padding-box,var(--edge) border-box;border:1px solid transparent;backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);box-shadow:var(--lift)}
@@ -185,8 +254,13 @@ nav.tabs button.on svg{color:var(--gold)}
 <script src="icons/icon.js"></script>
 <script src="store.js"></script>
 <script src="money.js"></script>
+<script src="banks.js"></script>
+<script src="items.js"></script>
 <script src="ui.js"></script>
 <script src="accounts.js"></script>
+<script src="commit.js"></script>
+<script src="today.js"></script>
+<script src="forecast.js"></script>
 <script src="settings.js"></script>
 <script src="app.js"></script>
 </body>

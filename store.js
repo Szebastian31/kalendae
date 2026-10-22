@@ -4,23 +4,16 @@ const STORE_KEY = 'kalendae-state';
 const SCHEMA = 1;
 
 const ACCOUNT_TYPES = {
-  bank:    { label: 'Bank account', group: 'Banks', icon: '<rect x="3" y="9" width="18" height="10" rx="1.5"/><path d="M2 9l10-5 10 5M7 12v4M12 12v4M17 12v4"/>',
-             providers: ['mBank', 'PKO BP', 'ING', 'Santander', 'Pekao', 'Millennium', 'Alior', 'BNP Paribas', 'Credit Agricole', 'Velo', 'Chase', 'Bank of America'] },
-  savings: { label: 'Savings', group: 'Banks', icon: '<circle cx="12" cy="13" r="7"/><path d="M12 9v8M9.5 11h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/>',
-             providers: ['mBank', 'PKO BP', 'ING', 'Santander', 'Pekao', 'Millennium', 'Revolut', 'Trading 212'] },
-  card:    { label: 'Credit card', group: 'Banks', icon: '<rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M3 10h18M7 15h4"/>',
-             providers: ['mBank', 'PKO BP', 'ING', 'Santander', 'American Express', 'Revolut'] },
-  wallet:  { label: 'Wallet app', group: 'Wallets & e-money', icon: '<path d="M8 19l2-14h5a4 4 0 0 1 0 8h-4l-1 6z"/>',
-             providers: ['PayPal', 'Cash App', 'Venmo', 'Apple Cash', 'Google Wallet', 'Skrill', 'BLIK'] },
-  emoney:  { label: 'E-money', group: 'Wallets & e-money', icon: '<circle cx="12" cy="12" r="8"/><path d="M8 12h8M12 8l4 4-4 4"/>',
-             providers: ['Revolut', 'Wise', 'N26', 'Zen', 'Curve', 'Monzo'] },
-  cash:    { label: 'Cash', group: 'Cash', icon: '<rect x="2.5" y="7" width="19" height="10" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 10v4M18 10v4"/>',
-             providers: ['Wallet', 'Drawer', 'Piggy bank', 'Travel cash'] },
-  other:   { label: 'Other', group: 'Other', icon: '<circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/>',
-             providers: [] },
+  bank:    { label: 'Bank account', group: 'Banks', icon: '<rect x="3" y="9" width="18" height="10" rx="1.5"/><path d="M2 9l10-5 10 5M7 12v4M12 12v4M17 12v4"/>' },
+  savings: { label: 'Savings', group: 'Banks', icon: '<circle cx="12" cy="13" r="7"/><path d="M12 9v8M9.5 11h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/>' },
+  card:    { label: 'Credit card', group: 'Banks', icon: '<rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M3 10h18M7 15h4"/>' },
+  wallet:  { label: 'Wallet app', group: 'Wallets & e-money', icon: '<path d="M8 19l2-14h5a4 4 0 0 1 0 8h-4l-1 6z"/>' },
+  emoney:  { label: 'E-money', group: 'Wallets & e-money', icon: '<circle cx="12" cy="12" r="8"/><path d="M8 12h8M12 8l4 4-4 4"/>' },
+  cash:    { label: 'Cash', group: 'Cash', icon: '<rect x="2.5" y="7" width="19" height="10" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 10v4M18 10v4"/>' },
+  other:   { label: 'Other', group: 'Other', icon: '<circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/>' },
 };
 const GROUP_ORDER = ['Banks', 'Wallets & e-money', 'Cash', 'Other'];
-const ACCOUNT_COLORS = 6; // --a1 … --a6 in each look
+const ACCOUNT_COLORS = 12; // --a1 … --a12 in each look
 
 function freshState() {
   return {
@@ -32,6 +25,8 @@ function freshState() {
       currencies: ['PLN'],
       notifOn: true,
       notifTime: '09:00',
+      mainAcct: null,   // the account you spend from; null = where most income lands
+      floor: 0,         // keep at least this much in it (its own currency)
     },
     accounts: [],
     items: [],      // income, bills, subscriptions, moves (step 3)
@@ -77,7 +72,8 @@ function save() {
 }
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
-const todayISO = () => new Date().toISOString().slice(0, 10);
+const isoDay = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const todayISO = () => isoDay(new Date()); // local date, not UTC
 
 // ---- accounts ----
 function accountById(id) { return S.accounts.find(a => a.id === id); }

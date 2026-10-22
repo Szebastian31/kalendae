@@ -4,7 +4,7 @@
 
 No app store, no account, no bank login, no ads. Everything stays on your phone.
 
-> Work in progress. Version 0.1 is the foundation: the Android app installs, the icon is in place and notifications work. Accounts, bills, subscriptions and the forecast arrive in the next versions.
+> Work in progress. Version 0.3: accounts in any currency (banks, cards, PayPal, Revolut, Cash App, cash), shared accounts, income, bills, subscriptions and trials, the month's orbit, a 60-day forecast and what's safe to spend until payday. Weekly check-ins, smart notifications and keep-or-cancel rings come next.
 
 ---
 
@@ -43,7 +43,10 @@ The interface is plain HTML, CSS and JavaScript, hosted on GitHub Pages. The And
 | File | What it does |
 | --- | --- |
 | `index.html` | Layout and styles |
-| `app.js` | The app |
+| `store.js`, `money.js` | Saving on the phone, backups, currencies and NBP exchange rates |
+| `items.js` | Income, bills, subscriptions, moves, and the forecast maths |
+| `today.js`, `forecast.js`, `commit.js`, `accounts.js`, `settings.js` | The screens |
+| `banks.js`, `ui.js`, `app.js` | Banks around the world, shared helpers, the app shell |
 | `icons/icon.js` | The icon drawing, used by the app and `icons.html` |
 | `icons/icon.svg`, `icons.html` | The icon, and a page that exports the PNG icons |
 | `manifest.webmanifest`, `sw.js` | Home-screen install and offline cache |

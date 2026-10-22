@@ -76,10 +76,13 @@ function accountSheet(existing) {
       <input class="input money num" id="aBal" inputmode="decimal" value="${a.balance ? a.balance : ''}" placeholder="0"></div>
     <div class="field"><label>Currency</label><select class="input" id="aCur">${curOpts()}</select></div>
     <div class="field"><label>Name</label><input class="input" id="aName" value="${esc(a.name)}" placeholder="e.g. Personal, Holiday pot"></div>
-    <div class="field"><label>Bank or service</label><input class="input" id="aProv" list="provList" value="${esc(a.provider || '')}" placeholder="Optional">
-      <datalist id="provList"></datalist></div>
-    <div class="field"><label>Colour</label><div class="chips" id="aColor">${Array.from({ length: ACCOUNT_COLORS }, (_, i) =>
-      `<button class="chip ${i === a.color ? 'on' : ''}" data-c="${i}" style="padding:6px"><span class="dot" style="width:16px;height:16px;background:var(--a${i + 1})"></span></button>`).join('')}</div></div>
+    <div class="field"><label>Bank or service</label><input class="input" id="aProv" value="${esc(a.provider || '')}" placeholder="Search or type any name" autocomplete="off">
+      <div class="chips" id="provSug" style="margin-top:8px"></div></div>
+    <div class="field"><label>Everyday spending a month</label>
+      <input class="input num" id="aEvery" inputmode="decimal" value="${a.everyday ? a.everyday : ''}" placeholder="Optional · groceries, coffee, fuel…">
+      <p class="sub" style="margin-top:6px">A rough guess is fine. The forecast takes it off a little each day; weekly check-ins will refine it later.</p></div>
+    <div class="field"><label>Colour</label><div class="swatches" id="aColor">${Array.from({ length: ACCOUNT_COLORS }, (_, i) =>
+      `<button class="${i === a.color ? 'on' : ''}" data-c="${i}" style="background:var(--a${i + 1})" aria-label="Colour ${i + 1}"></button>`).join('')}</div></div>
     <div class="card" style="margin-top:16px;padding:12px 16px">
       <div class="tog"><div>Shared account<small>A joint account, or a pot you split with someone</small></div><button class="sw-t ${a.shared ? 'on' : ''}" id="aShared" aria-label="Shared"></button></div>
       <div id="shareBox" style="display:${a.shared ? 'block' : 'none'}">
@@ -94,7 +97,15 @@ function accountSheet(existing) {
     <div class="row2">${existing ? '<button class="btn danger" id="aDel">Delete</button>' : '<button class="btn ghost" id="aCancel">Cancel</button>'}<button class="btn" id="aSave">Save</button></div>`;
 
   openSheet(html, body => {
-    const provList = () => { $('#provList', body).innerHTML = ACCOUNT_TYPES[a.type].providers.map(p => `<option value="${esc(p)}">`).join(''); };
+    // suggestions from banks around the world; whatever you type is kept as-is
+    const provList = () => {
+      const q = $('#aProv', body).value;
+      const list = providerSuggestions(a.type, q, 10).filter(p => p !== q);
+      const custom = q.trim() && !list.some(p => fold(p) === fold(q.trim())) ? `<span class="sub" style="align-self:center">“${esc(q.trim())}” will be saved as typed</span>` : '';
+      $('#provSug', body).innerHTML = list.map(p => `<button class="chip" data-p="${esc(p)}">${esc(p)}</button>`).join('') + custom;
+      $$('#provSug [data-p]', body).forEach(b => b.onclick = () => { $('#aProv', body).value = b.dataset.p; provList(); });
+    };
+    $('#aProv', body).oninput = provList;
     provList();
     $$('#aType button', body).forEach(b => b.onclick = () => {
       a.type = b.dataset.k;
@@ -125,6 +136,7 @@ function accountSheet(existing) {
       a.cur = $('#aCur', body).value;
       a.name = $('#aName', body).value.trim() || ACCOUNT_TYPES[a.type].label;
       a.provider = $('#aProv', body).value.trim();
+      a.everyday = Math.abs(parseAmount($('#aEvery', body).value) || 0);
       a.partner = $('#aPartner', body).value.trim();
       upsertAccount(a);
       tick();
