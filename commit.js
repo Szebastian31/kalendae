@@ -10,10 +10,14 @@ function itemRow(it) {
   const rep = (REPEATS[it.repeat] || REPEATS.month)[0].replace('Every ', '').replace('Only once', 'once');
   const to = it.kind === 'move' ? ` → ${it.to ? esc((accountById(it.to) || {}).name || '?') : 'outside'}` : '';
   const meta = [`<span class="dot" style="background:${accColor(a)}"></span>${esc(a.name)}${to}`, it.paused ? 'paused' : rep, it.varies ? 'average' : ''].filter(Boolean).join(' · ');
+  // subscriptions get their keep / review / cancel ring instead of the date
+  const vd = it.kind === 'sub' && !isTrialNow(it) && !it.paused ? subVerdict(it) : null;
+  const lead = vd ? `<div class="when vr">${ringSvg(subSignals(it).map(s => s[0] === vd), 34, VERDICT[vd][1])}</div>`
+    : `<div class="when">${when ? `${when.toLocaleDateString('en-GB', { month: 'short' })}<b>${when.getDate()}</b>` : '—'}</div>`;
   return `<li class="it" data-id="${it.id}">
-    <div class="when">${when ? `${when.toLocaleDateString('en-GB', { month: 'short' })}<b>${when.getDate()}</b>` : '—'}</div>
-    <div><div class="nm">${esc(it.name)}${isTrialNow(it) ? '<span class="tag">Trial</span>' : ''}</div><div class="meta">${meta}</div></div>
-    <div class="amt num ${sign > 0 ? 'pos' : ''}">${sign > 0 ? '+' : ''}${b.main}${b.approx ? `<small>${b.approx}</small>` : ''}</div></li>`;
+    ${lead}
+    <div><div class="nm">${esc(it.name)}${isTrialNow(it) ? '<span class="tag">Trial</span>' : ''}</div><div class="meta">${meta}${vd && when ? ` · next ${when.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}</div></div>
+    <div class="amt num ${sign > 0 ? 'pos' : ''}">${sign > 0 ? '+' : ''}${b.main}${b.approx ? `<small>${b.approx}</small>` : ''}${vd ? `<span class="verdict" style="color:${VERDICT[vd][1]}">${VERDICT[vd][0]}</span>` : ''}</div></li>`;
 }
 
 function renderCommit() {
@@ -47,6 +51,16 @@ function renderCommit() {
       <div class="stat"><div class="k">Bills</div><div class="v num">${fmt(bills)}</div><div class="s">a month</div></div>
       <div class="stat"><div class="k">Subscriptions</div><div class="v num">${fmt(subs)}</div><div class="s">${fmt(subs * 12)} a year</div></div></div>
       <p class="sub" style="margin-top:10px">Monthly equivalents: a yearly bill counts as 1/12 here.${S.accounts.some(a => a.shared) ? ' Shared accounts are counted in full.' : ''}</p></div>`;
+    // subscriptions worth a second look
+    const look = items.filter(it => it.kind === 'sub' && !isTrialNow(it) && !it.paused && subVerdict(it) !== 'k');
+    if (look.length) {
+      const yearly = look.reduce((s, it) => s + conv(perMonth(it), itemCur(it)) * 12, 0);
+      const unrated = look.filter(it => !it.usage).length;
+      html += `<div class="card"><h3>Worth a look <em>${fmt(yearly)} a year</em></h3>
+        <div class="agree">${ringSvg(items.filter(it => it.kind === 'sub' && !isTrialNow(it) && !it.paused).map(it => subVerdict(it) === 'k'), 78)}
+        <p class="sub">${look.length} subscription${look.length > 1 ? 's' : ''} got a review or cancel vote: ${look.slice(0, 3).map(it => `<b>${esc(it.name)}</b>`).join(', ')}${look.length > 3 ? '…' : ''}.
+        ${unrated ? `Rate how often you use ${unrated > 1 ? 'them' : 'it'} for a fairer vote.` : 'Tap one to see why.'}</p></div></div>`;
+    }
     ['sub', 'bill', 'income', 'move'].forEach(kind => {
       const list = items.filter(it => it.kind === kind).sort((x, y) => (nextIn(x) ?? 9999) - (nextIn(y) ?? 9999));
       if (!list.length) return;
@@ -105,6 +119,17 @@ function itemSheet(existing, kind = 'sub', preset = null, title = null) {
       <p class="sub" style="margin-top:6px">A move between your own accounts isn't spending. “Outside Kalendae” is for money that leaves, like investing.</p></div>` : ''}
     <div class="field"><label>${dateLabel()}</label><input class="input num" id="iDate" type="date" value="${it.start}"></div>
     <div class="field"><label>Repeats</label><select class="input" id="iRep">${Object.entries(REPEATS).map(([k, [n]]) => `<option value="${k}" ${k === it.repeat ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+    <div class="field"><label>Notify me</label><div class="chips" id="iRem">${Object.entries(REMIND).map(([k, [n]]) =>
+      `<button class="chip ${k === remindOf(it) ? 'on' : ''}" data-r="${k}">${n}</button>`).join('')}</div>
+      ${isTrialNow(it) ? '<p class="sub" style="margin-top:6px">Trials always warn you 2 days before and on the day.</p>' : ''}</div>
+    ${it.kind === 'sub' ? `<div class="field"><label>How often do you use it?</label><div class="chips" id="iUse">${Object.entries(USAGE).map(([k, [n]]) =>
+        `<button class="chip ${k === it.usage ? 'on' : ''}" data-u="${k}">${n}</button>`).join('')}</div></div>
+      <div class="field"><label>Cheaper plans (optional)</label>
+        <div style="display:flex;gap:8px"><input class="input num" id="iAlt" inputmode="decimal" value="${it.alt || ''}" placeholder="Yearly plan, per year">
+        <input class="input num" id="iAltM" inputmode="decimal" value="${it.altMonthly || ''}" placeholder="Cheaper tier, a month"></div>
+        <p class="sub" style="margin-top:6px">In ${itemCur(it)}. Kalendae tells you if switching would save money.</p></div>
+      ${existing && !isTrialNow(it) ? `<div class="why">${(() => { const vd = subVerdict(it); return `<div class="why-h">${ringSvg(subSignals(it).map(s => s[0] === vd), 44, VERDICT[vd][1])}<b style="color:${VERDICT[vd][1]}">${VERDICT[vd][0]}</b></div>`; })()}
+        ${subSignals(it).map(([v, k, t]) => `<div><i style="color:${VERDICT[v][1]}">${k}</i><span>${esc(t)}</span></div>`).join('')}</div>` : ''}` : ''}
     <div class="card" style="margin-top:16px;padding:6px 16px">
       ${it.kind === 'sub' ? `<div class="tog"><div>Free trial now<small>The date above is when it turns paid</small></div><button class="sw-t ${it.trial ? 'on' : ''}" id="iTrial"></button></div>` : ''}
       ${it.kind !== 'move' ? `<div class="tog"><div>Amount changes<small>Like electricity: type an average</small></div><button class="sw-t ${it.varies ? 'on' : ''}" id="iVar"></button></div>` : ''}
@@ -118,6 +143,8 @@ function itemSheet(existing, kind = 'sub', preset = null, title = null) {
     const v = parseAmount($('#iAmt', body).value); if (v != null) it.amount = Math.abs(v);
     it.start = $('#iDate', body).value || it.start;
     it.repeat = $('#iRep', body).value;
+    const alt = $('#iAlt', body), altM = $('#iAltM', body);
+    if (alt) { it.alt = Math.abs(parseAmount(alt.value) || 0) || undefined; it.altMonthly = Math.abs(parseAmount(altM.value) || 0) || undefined; }
   };
   const mount = body => {
     const sug = () => {
@@ -128,6 +155,8 @@ function itemSheet(existing, kind = 'sub', preset = null, title = null) {
     };
     sug();
     $('#iName', body).oninput = sug;
+    $$('#iRem button', body).forEach(b => b.onclick = () => { keep(body); it.remind = b.dataset.r; redraw(); });
+    $$('#iUse button', body).forEach(b => b.onclick = () => { keep(body); it.usage = it.usage === b.dataset.u ? undefined : b.dataset.u; redraw(); });
     $$('#iKind button', body).forEach(b => b.onclick = () => {
       keep(body); it.kind = b.dataset.k;
       if (it.kind !== 'sub') it.trial = false;
@@ -173,6 +202,9 @@ function itemSheet(existing, kind = 'sub', preset = null, title = null) {
       if (it.kind === 'move' && it.to === it.acct) { toast('Pick a different account to move to'); return; }
       if (it.kind === 'move' && it.to) it.inName = `From ${accountById(it.acct).name}`; else delete it.inName;
       if (it.kind !== 'move' || !it.cur || it.cur === accountById(it.acct).cur) delete it.cur;
+      if (it.kind !== 'sub') { delete it.usage; delete it.alt; delete it.altMonthly; delete it.prices; }
+      notePrice(it, existing);
+      if (it.remind === defaultRemind(it)) delete it.remind;
       upsertItem(it);
       tick(); closeSheet();
       toast(existing ? 'Saved' : `${it.name} added`);

@@ -4,7 +4,7 @@
 
 No app store, no account, no bank login, no ads. Everything stays on your phone.
 
-> Work in progress. Version 0.3: accounts in any currency (banks, cards, PayPal, Revolut, Cash App, cash), shared accounts, income, bills, subscriptions and trials, the month's orbit, a 60-day forecast and what's safe to spend until payday. Weekly check-ins, smart notifications and keep-or-cancel rings come next.
+> Work in progress. Version 0.4: accounts in any currency (banks, cards, PayPal, Revolut, Cash App, cash), shared accounts, income, bills, subscriptions and trials, the month's orbit, a 60-day forecast, what's safe to spend until payday, notifications before renewals and trial endings, weekly check-ins that learn your everyday spending, a cash count, and keep / review / cancel rings for subscriptions.
 
 ---
 
@@ -44,7 +44,8 @@ The interface is plain HTML, CSS and JavaScript, hosted on GitHub Pages. The And
 | --- | --- |
 | `index.html` | Layout and styles |
 | `store.js`, `money.js` | Saving on the phone, backups, currencies and NBP exchange rates |
-| `items.js` | Income, bills, subscriptions, moves, and the forecast maths |
+| `items.js`, `subs.js` | Income, bills, subscriptions, moves, the forecast maths, and the keep / review / cancel vote |
+| `checkin.js`, `notify.js` | Weekly check-ins and cash count, and the notifications handed to Android |
 | `today.js`, `forecast.js`, `commit.js`, `accounts.js`, `settings.js` | The screens |
 | `banks.js`, `ui.js`, `app.js` | Banks around the world, shared helpers, the app shell |
 | `icons/icon.js` | The icon drawing, used by the app and `icons.html` |

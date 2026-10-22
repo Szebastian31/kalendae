@@ -34,6 +34,7 @@ function renderAll() {
   if (CURRENT_TAB === 'forecast') renderForecast();
 }
 onChange(renderAll);
+onChange(syncNotifEvents); // keep Android's list of upcoming notifications in step with your data
 
 let resizeT;
 window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if (CURRENT_TAB === 'forecast') renderForecast(); }, 150); });
@@ -41,11 +42,12 @@ window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTi
 // a new day may have started since the app was last open
 let lastDay = todayISO();
 window.kalendaeResume = () => {
-  if (todayISO() !== lastDay) { lastDay = todayISO(); renderAll(); } else renderHeader();
+  if (todayISO() !== lastDay) { lastDay = todayISO(); renderAll(); syncNotifEvents(); } else renderHeader();
   refreshRates().then(changed => { if (changed) renderAll(); });
 };
 
 renderAll();
 syncNotifConfig();
+syncNotifEvents();
 refreshRates().then(changed => { if (changed) renderAll(); });
 if ('serviceWorker' in navigator && !NATIVE && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});

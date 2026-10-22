@@ -126,6 +126,11 @@ function renderToday() {
   if (!items.length) html += `<div class="card"><h3>Next: what comes and goes</h3><p class="sub">Add your salary, bills and subscriptions so the orbit fills up and “safe to spend” knows what's coming.</p>
     <button class="btn wide" style="margin-top:12px" id="tAdd">Add income or a bill</button></div>`;
 
+  const due = checkinDue();
+  if (due.length) html += `<div class="card ciCard"><div class="wt">${svg('<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>')}
+    <div><b>Time for a check-in</b><br>${due.length === 1 ? `${esc(due[0].name)} was last updated ${agoText(due[0].balanceAt)}` : `${due.length} balances are a week old or more`}. Type what's in them now and Kalendae learns your everyday spending.</div></div>
+    <div class="row2"><button class="btn" id="tCheck">Check in</button></div></div>`;
+
   warnings().slice(0, 2).forEach(w => {
     const a = w.acct;
     html += `<div class="card warn"><div class="wt">${svg('<path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17.5v.5"/>')}
@@ -168,6 +173,7 @@ function renderToday() {
   v.innerHTML = html;
   drawOrbit($('#orbit'), $('#orbitCenter'), safe);
   const add = $('#tAdd'); if (add) add.onclick = () => itemSheet(null, 'income');
+  const chk = $('#tCheck'); if (chk) chk.onclick = () => checkinSheet();
   const ss = $('#safeSet'); if (ss) ss.onclick = e => { e.preventDefault(); safeSettingsSheet(); };
   $$('.it', v).forEach(r => r.onclick = () => itemSheet(S.items.find(x => x.id === r.dataset.id)));
   $$('[data-fix]', v).forEach(b => b.onclick = () => {
