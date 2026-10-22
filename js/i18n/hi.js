@@ -486,3 +486,14 @@ I18N.hi = {
   "The record and its receipt photo are deleted. Your balance stays as you typed it.": "रिकॉर्ड और रसीद की फ़ोटो हट जाएँगे। आपका बैलेंस वैसा ही रहेगा जैसा आपने लिखा।",
   "That photo couldn’t be opened": "वह फ़ोटो खुल नहीं सकी",
 };
+
+// 1.0.2: spending money across accounts
+Object.assign(I18N.hi, {
+  "Investments": "निवेश",
+  "Savings & investments": "बचत और निवेश",
+  "Spending money": "खर्च के पैसे",
+  "Spending accounts": "खर्च वाले खाते",
+  "Which accounts do you spend from day to day? Kalendae adds them up and counts what’s left until your next payday.": "आप रोज़मर्रा का खर्च किन खातों से करते हैं? Kalendae उन्हें जोड़कर बताता है कि अगली तनख्वाह तक कितना बचेगा।",
+  "Savings and investments stay out, so moving money into them counts as set aside, not as free to spend.": "बचत और निवेश शामिल नहीं होते, इसलिए उनमें भेजा गया पैसा अलग रखा गया माना जाता है, खर्च के लिए खाली नहीं।",
+  "Pick at least one account": "कम से कम एक खाता चुनें",
+});

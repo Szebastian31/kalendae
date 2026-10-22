@@ -1,5 +1,5 @@
 // Kalendae offline cache. Bump VERSION whenever you change a file so phones pick up the update.
-const VERSION = "kalendae-v6";
+const VERSION = "kalendae-v7";
 const FILES = ["./", "index.html", "manifest.webmanifest", "js/i18n.js", "js/store.js", "js/money.js", "js/banks.js", "js/items.js", "js/subs.js", "js/ui.js", "js/accounts.js", "js/commit.js", "js/spend.js", "js/today.js", "js/forecast.js", "js/checkin.js", "js/notify.js", "js/settings.js", "js/app.js", 
   "js/i18n/pl.js", "js/i18n/de.js", "js/i18n/uk.js", "js/i18n/es.js", "js/i18n/fr.js", "js/i18n/ru.js", "js/i18n/zh.js", "js/i18n/ja.js", "js/i18n/pt.js", "js/i18n/nl.js", "js/i18n/it.js", "js/i18n/hi.js", "js/i18n/ar.js", "js/i18n/el.js", "js/i18n/cs.js", "js/i18n/sv.js", 
   "icons/icon.js", "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "icons/apple-touch-icon.png"];

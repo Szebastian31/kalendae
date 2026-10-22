@@ -486,3 +486,14 @@ I18N.zh = {
   "The record and its receipt photo are deleted. Your balance stays as you typed it.": "记录和小票照片将被删除。余额保持你输入的数值。",
   "That photo couldn’t be opened": "无法打开这张照片",
 };
+
+// 1.0.2: spending money across accounts
+Object.assign(I18N.zh, {
+  "Investments": "投资",
+  "Savings & investments": "储蓄与投资",
+  "Spending money": "日常开销资金",
+  "Spending accounts": "日常开销账户",
+  "Which accounts do you spend from day to day? Kalendae adds them up and counts what’s left until your next payday.": "你日常用哪些账户花钱？Kalendae 会把它们加在一起，算出到下次发薪前还剩多少。",
+  "Savings and investments stay out, so moving money into them counts as set aside, not as free to spend.": "储蓄和投资不计入，所以转入其中的钱算作存起来的钱，而不是可以花的钱。",
+  "Pick at least one account": "请至少选择一个账户",
+});

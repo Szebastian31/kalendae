@@ -7,15 +7,18 @@ const DEMO = (location.search.match(/[?&]demo=(\w+)/) || [])[1] || null;
 
 const ACCOUNT_TYPES = {
   bank:    { label: t('Bank account'), group: t('Banks'), icon: '<rect x="3" y="9" width="18" height="10" rx="1.5"/><path d="M2 9l10-5 10 5M7 12v4M12 12v4M17 12v4"/>' },
-  savings: { label: t('Savings'), group: t('Banks'), icon: '<circle cx="12" cy="13" r="7"/><path d="M12 9v8M9.5 11h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/>' },
+  savings: { label: t('Savings'), group: t('Savings & investments'), icon: '<circle cx="12" cy="13" r="7"/><path d="M12 9v8M9.5 11h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/>' },
+  invest:  { label: t('Investments'), group: t('Savings & investments'), icon: '<path d="M3 20h18"/><path d="M5 16l5-5 4 3 6-7"/><path d="M16 7h4v4"/>' },
   card:    { label: t('Credit card'), group: t('Banks'), icon: '<rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M3 10h18M7 15h4"/>' },
   wallet:  { label: t('Wallet app'), group: t('Wallets & e-money'), icon: '<path d="M8 19l2-14h5a4 4 0 0 1 0 8h-4l-1 6z"/>' },
   emoney:  { label: t('E-money'), group: t('Wallets & e-money'), icon: '<circle cx="12" cy="12" r="8"/><path d="M8 12h8M12 8l4 4-4 4"/>' },
   cash:    { label: t('Cash'), group: t('Cash'), icon: '<rect x="2.5" y="7" width="19" height="10" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 10v4M18 10v4"/>' },
   other:   { label: t('Other'), group: t('Other'), icon: '<circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/>' },
 };
-const GROUP_ORDER = [t('Banks'), t('Wallets & e-money'), t('Cash'), t('Other')];
+const GROUP_ORDER = [t('Banks'), t('Wallets & e-money'), t('Cash'), t('Savings & investments'), t('Other')];
 const ACCOUNT_COLORS = 12; // --a1 … --a12 in each look
+// money you spend day to day; savings, investments and cards stay out of "safe to spend" unless you tick them
+const SPEND_TYPES = ['bank', 'wallet', 'emoney', 'cash', 'other'];
 
 function freshState() {
   return {
@@ -27,11 +30,12 @@ function freshState() {
       currencies: ['PLN'],
       notifOn: true,
       notifTime: '09:00',
-      mainAcct: null,   // the account you spend from; null = where most income lands
-      floor: 0,         // keep at least this much in it (its own currency)
+      mainAcct: null,   // where new bills go by default; null = where most income lands
+      floor: 0,         // keep at least this much across your spending money
+      floorCur: null,   // the floor's currency; null = the one you show money in
       checkinDay: 0,    // weekly check-in reminder: 0 = Sunday … 6 = Saturday, null = off
     },
-    accounts: [],
+    accounts: [],   // a.spend: true/false counts it in "safe to spend" or not; unset = by type (SPEND_TYPES)
     items: [],      // income, bills, subscriptions, moves
     checkins: [],   // weekly balance check-ins
     spends: [],     // purchases logged as you make them (receipt photos live in IndexedDB)
@@ -64,6 +68,11 @@ function migrate(s) {
     if (a.shared && !a.split) a.split = { mode: 'equal', mine: 50 };
   });
   if (!s.settings.currencies.includes(s.settings.display)) s.settings.currencies.unshift(s.settings.display);
+  // before 1.0.2 the floor was kept in the one spending account, in its currency
+  if (s.settings.floor && !s.settings.floorCur) {
+    const old = s.accounts.find(a => a.id === s.settings.mainAcct);
+    s.settings.floorCur = old ? old.cur : s.settings.display;
+  }
   s.schema = SCHEMA;
   return s;
 }
@@ -86,6 +95,7 @@ function liveAccounts() { return S.accounts.filter(a => !a.archived); }
 function myShare(a) { return a.shared ? (a.split && a.split.mode === 'percent' ? a.split.mine / 100 : 0.5) : 1; }
 // cards hold debt: a positive balance on a card is what you owe
 function signedBalance(a) { return a.type === 'card' ? -Math.abs(a.balance) : a.balance; }
+const countsToSpend = a => a.spend != null ? !!a.spend : SPEND_TYPES.includes(a.type);
 
 function upsertAccount(a) {
   const i = S.accounts.findIndex(x => x.id === a.id);

@@ -113,16 +113,29 @@ function forecast(ids, n = HORIZON) {
 }
 const lowestPoint = f => f.slice(1).reduce((m, p) => (p.mid < m.mid ? p : m), f[1] || f[0]);
 
-// ---- the account you spend from, and what's safe to spend until money next arrives in it ----
+// ---- your spending money: every bank, wallet, e-money and cash account added together ----
+// Savings, investments and cards stay out unless you tick them, so a move into savings counts as set aside.
+function spendingAccounts() {
+  const live = liveAccounts();
+  const pool = live.filter(countsToSpend);
+  if (pool.length) return pool;
+  const one = live.find(a => a.type !== 'card') || live[0];
+  return one ? [one] : [];
+}
+// the cushion "safe to spend" never touches, in the display currency
+const spendFloor = () => conv(S.settings.floor || 0, S.settings.floorCur || S.settings.display);
+
+// the account most of your income lands in (and where new bills go by default)
 function mainAccount() {
+  const pool = spendingAccounts();
   const chosen = S.settings.mainAcct && accountById(S.settings.mainAcct);
-  if (chosen && !chosen.archived) return chosen;
+  if (chosen && !chosen.archived && pool.includes(chosen)) return chosen;
   const by = {};
-  liveItems().filter(it => it.kind === 'income').forEach(it => { by[it.acct] = (by[it.acct] || 0) + conv(perMonth(it), itemCur(it)); });
+  liveItems().filter(it => it.kind === 'income' && pool.some(a => a.id === it.acct)).forEach(it => { by[it.acct] = (by[it.acct] || 0) + conv(perMonth(it), itemCur(it)); });
   const best = Object.entries(by).sort((x, y) => y[1] - x[1])[0];
   if (best) return accountById(best[0]);
   const live = liveAccounts();
-  return live.find(a => a.type === 'bank') || live.find(a => a.type !== 'card') || live[0] || null;
+  return pool.find(a => a.type === 'bank') || pool[0] || live.find(a => a.type !== 'card') || live[0] || null;
 }
 // the next day (from … max) that income lands in this account
 function nextPayday(a, from = 1, max = 62) {
@@ -134,56 +147,80 @@ function nextPayday(a, from = 1, max = 62) {
   });
   return best;
 }
+// your payday: when your main income next arrives, else the first income into any spending account
+function poolPayday(pool, from = 1, max = 62) {
+  const main = mainAccount();
+  const k = main && pool.includes(main) ? nextPayday(main, from, max) : null;
+  if (k != null) return k;
+  return pool.reduce((best, a) => { const x = nextPayday(a, from, max); return x != null && (best == null || x < best) ? x : best; }, null);
+}
 function safeToSpend() {
-  const a = mainAccount();
-  if (!a) return null;
-  const payT = nextPayday(a);
+  const pool = spendingAccounts();
+  if (!pool.length) return null;
+  const ids = pool.map(a => a.id);
+  const w = a => ids.length > 1 ? myShare(a) : 1; // only your part of shared accounts, as in the forecast
+  const payT = poolPayday(pool);
   const until = payT || 30;
-  const f = forecast([a.id], until);
+  const f = forecast(ids, until);
   let committed = 0;
   for (let k = 0; k < until; k++) f[k].ev.forEach(e => committed += e.a);
-  const start = conv(signedBalance(a), a.cur);
-  const floor = conv(S.settings.floor || 0, a.cur);
+  const start = pool.reduce((s, a) => s + conv(signedBalance(a), a.cur) * w(a), 0);
+  const floor = spendFloor();
   const safe = start + committed - floor;
-  return { acct: a, payT, until, safe, perDay: safe / until, fun: safe - dailySpend(a) * until, committed: -committed, floor, noIncome: payT == null };
+  const daily = pool.reduce((s, a) => s + dailySpend(a) * w(a), 0);
+  return { acct: mainAccount() || pool[0], accts: pool, payT, until, safe, perDay: safe / until, fun: safe - daily * until, daily,
+    committed: -committed, floor, noIncome: payT == null };
 }
 
-// what the next payday in your main account is planned for
+// what your next payday is planned for, across your spending money
 function paydayPlan() {
-  const a = mainAccount();
-  if (!a) return null;
-  const p1 = nextPayday(a);
+  const pool = spendingAccounts();
+  if (!pool.length) return null;
+  const ids = new Set(pool.map(a => a.id));
+  const w = a => pool.length > 1 ? myShare(a) : 1;
+  const p1 = poolPayday(pool);
   if (p1 == null) return null;
-  const p2 = nextPayday(a, p1 + 1, p1 + 62) || p1 + 30;
-  const incomeItems = liveItems().filter(it => it.kind === 'income' && it.acct === a.id && occurrences(it, p1, p1).length);
-  const income = incomeItems.reduce((s, it) => s + conv(it.amount, itemCur(it)), 0);
+  const p2 = poolPayday(pool, p1 + 1, p1 + 62) || p1 + 30;
+  const incomeItems = liveItems().filter(it => it.kind === 'income' && ids.has(it.acct) && occurrences(it, p1, p1).length);
+  const income = incomeItems.reduce((s, it) => s + conv(it.amount, itemCur(it)) * w(accountById(it.acct)), 0);
   const moves = {}, rows = [];
   let bills = 0;
-  liveItems().filter(it => it.acct === a.id && it.kind !== 'income').forEach(it => {
+  liveItems().filter(it => ids.has(it.acct) && it.kind !== 'income').forEach(it => {
+    const src = accountById(it.acct), dst = it.kind === 'move' && it.to ? accountById(it.to) : null;
+    const inDst = !!dst && ids.has(dst.id);
+    if (inDst && w(src) === w(dst)) return; // only moving money between your spending accounts
     const times = occurrences(it, p2 - 1, p1).length;
     if (!times) return;
-    const v = conv(it.amount, itemCur(it)) * times;
+    const amt = conv(it.amount, itemCur(it)) * times;
+    const v = amt * w(src) - (inDst ? amt * w(dst) : 0); // into a shared spending account, only the part that stops being yours
     if (it.kind === 'move') moves[it.name] = (moves[it.name] || 0) + v; else bills += v;
   });
   Object.entries(moves).forEach(([k, v], i) => rows.push({ k, v, c: `var(--a${(i % 4) + 3})` }));
   if (bills) rows.push({ k: t('Bills & subscriptions'), v: bills, c: 'var(--a2)' });
-  const every = dailySpend(a) * (p2 - p1);
+  const every = pool.reduce((s, a) => s + dailySpend(a) * w(a), 0) * (p2 - p1);
   if (every) rows.push({ k: t('Everyday'), v: every, c: 'var(--muted)', s: t('your estimate') });
   const left = income - rows.reduce((s, r) => s + r.v, 0);
-  return { acct: a, day: p1, nextDay: p2, income, rows, left };
+  return { acct: mainAccount() || pool[0], day: p1, nextDay: p2, income, rows, left };
 }
 
-// the first day each account dips below zero (or below your floor in the main account)
+// the first day each account dips below zero, and the day your spending money dips below your floor
 function warnings() {
-  const main = mainAccount();
+  const pool = spendingAccounts();
+  const floor = spendFloor();
+  const solo = pool.length === 1 ? pool[0] : null; // one spending account: its own warning uses the floor
   const out = [];
   liveAccounts().filter(a => a.type !== 'card').forEach(a => {
     const f = forecast([a.id]);
-    const floor = a === main ? conv(S.settings.floor || 0, a.cur) : 0;
-    const first = f.find(p => p.t > 0 && p.mid < floor);
+    const fl = a === solo ? floor : 0;
+    const first = f.find(p => p.t > 0 && p.mid < fl);
     if (!first) return;
-    out.push({ acct: a, first, low: lowestPoint(f), floor, payT: nextPayday(a) });
+    out.push({ acct: a, first, low: lowestPoint(f), floor: fl, payT: nextPayday(a) });
   });
+  if (pool.length > 1 && floor > 0) {
+    const f = forecast(pool.map(a => a.id));
+    const first = f.find(p => p.t > 0 && p.mid < floor);
+    if (first) out.push({ acct: mainAccount() || pool[0], pool: true, label: t('Spending money'), first, low: lowestPoint(f), floor, payT: poolPayday(pool) });
+  }
   return out.sort((x, y) => x.first.t - y.first.t);
 }
 

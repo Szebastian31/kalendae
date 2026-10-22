@@ -486,3 +486,14 @@ I18N.cs = {
   "The record and its receipt photo are deleted. Your balance stays as you typed it.": "Záznam i fotka účtenky se smažou. Zůstatek zůstane, jak jsi ho zadal.",
   "That photo couldn’t be opened": "Tu fotku nelze otevřít",
 };
+
+// 1.0.2: spending money across accounts
+Object.assign(I18N.cs, {
+  "Investments": "Investice",
+  "Savings & investments": "Spoření a investice",
+  "Spending money": "Peníze na útratu",
+  "Spending accounts": "Účty pro výdaje",
+  "Which accounts do you spend from day to day? Kalendae adds them up and counts what’s left until your next payday.": "Ze kterých účtů denně utrácíte? Kalendae je sečte a spočítá, kolik zbude do další výplaty.",
+  "Savings and investments stay out, so moving money into them counts as set aside, not as free to spend.": "Spoření a investice se nepočítají, takže převod na ně se bere jako odložené peníze, ne jako volné k utrácení.",
+  "Pick at least one account": "Vyberte alespoň jeden účet",
+});

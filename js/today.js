@@ -107,6 +107,12 @@ function drawCenter(c, safe) {
     <div class="sub">${safe.noIncome ? t('next 30 days') : t('until payday · {d}', { d: dfmt(dateIn(safe.payT), { day: 'numeric', month: 'short' }) })}<br>${safe.safe > 0 ? t('≈ {v} a day', { v: fmt(safe.perDay) }) : t('after what’s planned')}</div>`;
 }
 
+// "Personal, Revolut, Cash", or "5 accounts" when there are many
+function poolNames(pool, bold) {
+  const b = s => bold ? `<b>${s}</b>` : s;
+  return pool.length <= 3 ? pool.map(a => b(esc(a.name))).join(', ') : b(tn(pool.length, '{n} account', '{n} accounts'));
+}
+
 function renderToday() {
   const v = $('#vToday');
   const accts = liveAccounts();
@@ -132,30 +138,36 @@ function renderToday() {
     <div><b>${t('Time for a check-in')}</b><br>${due.length === 1 ? t('{a} was last updated {ago}.', { a: esc(due[0].name), ago: agoText(due[0].balanceAt) }) : t('{n} balances are a week old or more.', { n: due.length })} ${t('Type what’s in them now and Kalendae learns your everyday spending.')}</div></div>
     <div class="row2"><button class="btn" id="tCheck">${t('Check in')}</button></div></div>`;
 
-  warnings().slice(0, 2).forEach(w => {
-    const a = w.acct;
+  const ws = warnings().slice(0, 2);
+  ws.forEach((w, i) => {
+    const a = w.acct, name = esc(w.label || a.name);
     html += `<div class="card warn"><div class="wt">${svg('<path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17.5v.5"/>')}
-      <div><b>${t('{a} runs short around {d}', { a: esc(a.name), d: short(w.first.date) })}</b><br>
-      ${w.payT && w.payT > w.first.t ? t('Lowest point {v} on {d}, before money next arrives.', { v: fmt(w.low.mid), d: short(w.low.date) }) : t('Lowest point {v} on {d}.', { v: fmt(w.low.mid), d: short(w.low.date) })}${a.shared && a.partner ? ' ' + t('Worth telling {name}.', { name: esc(a.partner) }) : ''}</div></div>
-      <div class="row2"><button class="btn ghost" data-fix="${a.id}">${t('Plan a top-up')}</button></div></div>`;
+      <div><b>${t('{a} runs short around {d}', { a: name, d: short(w.first.date) })}</b><br>
+      ${w.payT && w.payT > w.first.t ? t('Lowest point {v} on {d}, before money next arrives.', { v: fmt(w.low.mid), d: short(w.low.date) }) : t('Lowest point {v} on {d}.', { v: fmt(w.low.mid), d: short(w.low.date) })}${!w.pool && a.shared && a.partner ? ' ' + t('Worth telling {name}.', { name: esc(a.partner) }) : ''}</div></div>
+      <div class="row2"><button class="btn ghost" data-fix="${i}">${t('Plan a top-up')}</button></div></div>`;
   });
 
   html += spendCardHtml();
 
   if (safe) {
+    const pool = safe.accts;
     const nonIncome = items.filter(it => it.kind !== 'income').length;
+    const fresh = a => a.balanceAt && daysBetween(fromISO(a.balanceAt), day0()) <= 7;
+    const stale = pool.filter(a => !fresh(a));
+    const oldest = pool.slice().sort((x, y) => (x.balanceAt || '').localeCompare(y.balanceAt || ''))[0];
     const sig = [
-      [!safe.noIncome, safe.noIncome ? t('No income dated in {a}', { a: esc(safe.acct.name) }) : t('Income is dated')],
+      [!safe.noIncome, safe.noIncome ? t('No income dated in {a}', { a: poolNames(pool) }) : t('Income is dated')],
       [nonIncome > 0, nonIncome ? tn(nonIncome, '{n} commitment has a date', '{n} commitments have dates') : t('No bills or subscriptions yet')],
-      [safe.acct.balanceAt && (new Date(todayISO()) - new Date(safe.acct.balanceAt)) / 864e5 <= 7, t('Balance updated {ago}', { ago: agoText(safe.acct.balanceAt) })],
-      [!!safe.acct.everyday, safe.acct.everyday ? t('Everyday spending is set') : t('Everyday spending not set')],
+      [!stale.length, stale.length > 1 ? t('{n} balances are a week old or more.', { n: stale.length }) : t('Balance updated {ago}', { ago: agoText((stale[0] || oldest).balanceAt) })],
+      [pool.some(a => a.everyday), pool.some(a => a.everyday) ? t('Everyday spending is set') : t('Everyday spending not set')],
     ];
     const agree = sig.filter(s => s[0]).length;
     const sure = [t('Rough guess'), t('Rough guess'), t('Fairly sure'), t('Fairly sure'), t('Sure')][agree];
+    const floorTxt = S.settings.floor ? fmt(S.settings.floor, S.settings.floorCur || S.settings.display) : '';
     html += `<div class="card" id="safeCard"><h3>${t('How sure is “safe to spend”?')} <em>${sure}</em></h3>
       <div class="agree">${ringSvg(sig.map(s => s[0]))}<ul>${sig.map(s => `<li class="${s[0] ? 'y' : 'n'}"><i>${s[0] ? '✓' : '~'}</i>${s[1]}</li>`).join('')}</ul></div>
-      <p class="sub" style="margin-top:10px">${safe.acct.everyday && safe.fun > 0 ? t('At your usual everyday spending you’d still have {v} spare for fun.', { v: `<b class="num">${fmt(safe.fun)}</b>` }) : ''}
-      ${S.settings.floor ? t('Counted from {a}, keeping {v} untouched.', { a: `<b>${esc(safe.acct.name)}</b>`, v: fmt(S.settings.floor, safe.acct.cur) }) : t('Counted from {a}.', { a: `<b>${esc(safe.acct.name)}</b>` })} <a href="#" id="safeSet" class="link">${t('Change')}</a></p></div>`;
+      <p class="sub" style="margin-top:10px">${safe.daily && safe.fun > 0 ? t('At your usual everyday spending you’d still have {v} spare for fun.', { v: `<b class="num">${fmt(safe.fun)}</b>` }) : ''}
+      ${floorTxt ? t('Counted from {a}, keeping {v} untouched.', { a: poolNames(pool, true), v: floorTxt }) : t('Counted from {a}.', { a: poolNames(pool, true) })} <a href="#" id="safeSet" class="link">${t('Change')}</a></p></div>`;
   }
 
   const plan = paydayPlan();
@@ -164,7 +176,7 @@ function renderToday() {
     html += `<div class="card"><h3>${t('Payday plan · {d}', { d: short(dateIn(plan.day)) })} <em class="num">${fmt(plan.income)}</em></h3>
       <div class="planbar">${plan.rows.map(r => `<div style="flex:${r.v / total};background:${r.c}"></div>`).join('')}${plan.left > 0 ? `<div style="flex:${plan.left / total};background:var(--gold)"></div>` : ''}</div>
       <div class="planlist">${plan.rows.map(r => `<div class="l"><span class="dot" style="background:${r.c}"></span><span>${esc(r.k)}${r.s ? `<small>${r.s}</small>` : ''}</span></div><div class="num">${fmt(r.v)}</div>`).join('')}
-      <div class="l"><span class="dot" style="background:var(--gold)"></span><span><b>${plan.left >= 0 ? t('Free') : t('Short')}</b><small>${plan.left >= 0 ? t('yours to spend, save or invest') : t('more is planned than comes in')}</small></span></div><div class="num" style="color:${plan.left < 0 ? 'var(--warn)' : 'inherit'}"><b>${fmt(plan.left)}</b></div></div></div>`;
+        <div class="l"><span class="dot" style="background:var(--gold)"></span><span><b>${plan.left >= 0 ? t('Free') : t('Short')}</b><small>${plan.left >= 0 ? t('yours to spend, save or invest') : t('more is planned than comes in')}</small></span></div><div class="num" style="color:${plan.left < 0 ? 'var(--warn)' : 'inherit'}"><b>${fmt(plan.left)}</b></div></div></div>`;
   }
 
   const next = upcoming(14).slice(0, 7);
@@ -183,27 +195,38 @@ function renderToday() {
   $$('.it[data-id]', v).forEach(r => r.onclick = () => itemSheet(S.items.find(x => x.id === r.dataset.id)));
   mountSpendButtons(v);
   $$('[data-fix]', v).forEach(b => b.onclick = () => {
-    const a = accountById(b.dataset.fix);
-    const from = liveAccounts().find(x => x.id !== a.id && x.type === 'savings') || liveAccounts().find(x => x.id !== a.id && x.type !== 'card');
+    const w = ws[+b.dataset.fix], a = w.acct;
+    // top up from savings first; for your spending money as a whole, from an account outside it
+    const ok = x => x.id !== a.id && x.type !== 'card' && (!w.pool || !countsToSpend(x));
+    const from = liveAccounts().find(x => ok(x) && x.type === 'savings') || liveAccounts().find(ok);
     if (!from) { toast(t('Add another account to move money from')); return; }
-    const w = warnings().find(w => w.acct.id === a.id);
     const need = Math.ceil(conv(w.floor - w.low.mid, S.settings.display, from.cur) / 50) * 50 + 50;
     itemSheet(null, 'move', { id: uid(), kind: 'move', name: t('Top up {a}', { a: a.name }), amount: need, acct: from.id, to: a.id, cur: from.cur,
       start: isoDay(addDays(w.first.date, -1)), repeat: 'once', trial: false, varies: false, paused: false }, t('Plan a top-up'));
   });
 }
 
+// which accounts count as spending money, and the cushion it never touches
 function safeSettingsSheet() {
-  const a = mainAccount();
-  openSheet(`<h2>${t('Safe to spend')}</h2><p class="lead">${t('Which account do you spend from day to day? Kalendae counts what’s left in it until your next income arrives.')}</p>
-    <div class="field"><label>${t('Spending account')}</label><div class="chips" id="mA">${liveAccounts().filter(x => x.type !== 'card').map(x =>
-      `<button class="chip ${x.id === a.id ? 'on' : ''}" data-a="${x.id}"><span class="dot" style="background:${accColor(x)}"></span>${esc(x.name)}</button>`).join('')}</div></div>
-    <div class="field"><label>${t('Always keep at least')}</label><div style="display:flex;gap:8px;align-items:center"><input class="input money num" id="mF" inputmode="decimal" value="${S.settings.floor || ''}" placeholder="0" style="flex:1"><span class="sub" id="mC">${a.cur}</span></div>
+  const pool = new Set(spendingAccounts().map(a => a.id));
+  const fc = S.settings.floorCur || S.settings.display;
+  openSheet(`<h2>${t('Safe to spend')}</h2><p class="lead">${t('Which accounts do you spend from day to day? Kalendae adds them up and counts what’s left until your next payday.')}</p>
+    <div class="field"><label>${t('Spending accounts')}</label><div class="chips" id="mA">${liveAccounts().map(x =>
+      `<button class="chip ${pool.has(x.id) ? 'on' : ''}" data-a="${x.id}"><span class="dot" style="background:${accColor(x)}"></span>${esc(x.name)}</button>`).join('')}</div>
+      <p class="sub" style="margin-top:6px">${t('Savings and investments stay out, so moving money into them counts as set aside, not as free to spend.')}</p></div>
+    <div class="field"><label>${t('Always keep at least')}</label><div style="display:flex;gap:8px;align-items:center"><input class="input money num" id="mF" inputmode="decimal" value="${S.settings.floor || ''}" placeholder="0" style="flex:1"><span class="sub">${fc}</span></div>
       <p class="sub" style="margin-top:6px">${t('A cushion that “safe to spend” never touches. You’ll get a warning if the forecast dips below it.')}</p></div>
     <div class="row2"><button class="btn ghost" id="mX">${t('Cancel')}</button><button class="btn" id="mS">${t('Save')}</button></div>`, body => {
-    let pick = a.id;
-    $$('#mA button', body).forEach(b => b.onclick = () => { pick = b.dataset.a; $$('#mA button', body).forEach(x => x.classList.toggle('on', x === b)); $('#mC', body).textContent = accountById(pick).cur; });
+    $$('#mA button', body).forEach(b => b.onclick = () => { tick('8'); b.classList.toggle('on'); });
     $('#mX', body).onclick = closeSheet;
-    $('#mS', body).onclick = () => { S.settings.mainAcct = pick; S.settings.floor = Math.abs(parseAmount($('#mF', body).value) || 0); save(); closeSheet(); toast(t('Saved')); };
+    $('#mS', body).onclick = () => {
+      const on = new Set($$('#mA button.on', body).map(b => b.dataset.a));
+      if (!on.size) { toast(t('Pick at least one account')); return; }
+      // only remember choices that differ from the default for that kind of account
+      liveAccounts().forEach(x => { const want = on.has(x.id); if (want === SPEND_TYPES.includes(x.type)) delete x.spend; else x.spend = want; });
+      S.settings.floor = Math.abs(parseAmount($('#mF', body).value) || 0);
+      S.settings.floorCur = fc;
+      save(); closeSheet(); toast(t('Saved'));
+    };
   });
 }
