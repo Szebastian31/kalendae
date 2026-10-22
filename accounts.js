@@ -44,17 +44,18 @@ function renderAccounts() {
         <div class="bal num">${b.main}${b.approx ? `<small>${b.approx}</small>` : ''}</div></div>`;
     }).join('');
   });
-  html += `<button class="btn ghost wide" style="margin-top:14px" id="addAcct">${svg('<path d="M12 5v14M5 12h14"/>')} Add an account</button></div>`;
+  html += `<div class="row2"><button class="btn" id="checkAll">${svg('<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>')} Check in</button><button class="btn ghost" id="addAcct">${svg('<path d="M12 5v14M5 12h14"/>')} Add</button></div></div>`;
 
   if (curs.some(c => c !== S.settings.display)) {
     html += `<div class="card"><h3>Exchange rates <em>${RATES.source === 'NBP' ? '30-day average' : 'estimate'}</em></h3>
       <div class="rates">${curs.filter(c => c !== S.settings.display).map(c => `<div>${c}<b class="num">${rateLine(c)}</b>±${rateSpread(c).toFixed(1)}% this month</div>`).join('')}</div>
       <p class="sub" style="margin-top:10px">${ratesNote()}</p></div>`;
   }
-  html += `<p class="honest">Tap an account to update its balance. Amounts in other currencies carry a ≈; they're converted at an average, not today's exact rate.</p>`;
+  html += `<p class="honest">Check in each week (or tap an account) to update balances; cash accounts get a note-by-note count. Amounts in other currencies carry a ≈; they're converted at an average, not today's exact rate.</p>`;
   v.innerHTML = html;
   $$('.acct', v).forEach(r => r.onclick = () => accountSheet(accountById(r.dataset.id)));
   $('#addAcct').onclick = () => accountSheet();
+  $('#checkAll').onclick = () => checkinSheet();
 }
 
 // ---- add / edit ----

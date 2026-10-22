@@ -100,7 +100,7 @@ function forecast(ids, n = HORIZON) {
   const accts = ids.map(accountById).filter(Boolean);
   let bal = accts.reduce((s, a) => s + conv(signedBalance(a), a.cur) * w(a), 0);
   const mean = accts.reduce((s, a) => s + dailySpend(a) * w(a), 0);
-  const sd = Math.sqrt(accts.reduce((s, a) => s + (dailySpend(a) * w(a) * 0.6) ** 2, 0));
+  const sd = Math.sqrt(accts.reduce((s, a) => s + (dailySpread(a) * w(a)) ** 2, 0)); // learned from check-ins
   const fx = accts.reduce((s, a) => s + (a.cur === S.settings.display ? 0 : Math.abs(conv(a.balance, a.cur)) * w(a) * rateSpread(a.cur) / 100), 0);
   const out = [];
   for (let t = 0; t <= n; t++) {

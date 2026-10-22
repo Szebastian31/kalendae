@@ -27,6 +27,7 @@ function freshState() {
       notifTime: '09:00',
       mainAcct: null,   // the account you spend from; null = where most income lands
       floor: 0,         // keep at least this much in it (its own currency)
+      checkinDay: 0,    // weekly check-in reminder: 0 = Sunday … 6 = Saturday, null = off
     },
     accounts: [],
     items: [],      // income, bills, subscriptions, moves (step 3)

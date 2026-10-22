@@ -36,6 +36,9 @@ function settingsSheet() {
         <input class="input num" id="sTime" type="time" value="${st.notifTime}" style="width:118px;padding:8px 10px" ${NATIVE ? '' : 'disabled'}></div>
       ${NATIVE ? `<div class="tog"><div>Notifications on this phone<small>${allowed ? 'Allowed' : 'Not allowed yet'}</small></div>
         <button class="btn ghost" style="padding:8px 12px;font-size:13px" id="sPerm">${allowed ? 'Settings' : 'Allow'}</button></div>` : ''}
+      <div class="tog"><div>Weekly check-in<small>A reminder to type your balances</small></div>
+        <select class="input" id="sCheck" style="width:138px;padding:8px 10px">${['off'].concat(WEEKDAYS.map((_, i) => i)).map(v =>
+          `<option value="${v}" ${(v === 'off' ? st.checkinDay == null : +v === st.checkinDay) ? 'selected' : ''}>${v === 'off' ? 'Off' : WEEKDAYS[v]}</option>`).join('')}</select></div>
     </div>
 
     <div class="field"><label>Backup</label>
@@ -69,6 +72,7 @@ function settingsSheet() {
       $('#sTime', body).onchange = e => { st.notifTime = e.target.value || '09:00'; save(); syncNotifConfig(); toast(`Daily notification around ${st.notifTime}`); };
       $('#sPerm', body).onclick = () => allowed ? NATIVE.openNotifSettings() : NATIVE.askNotifications();
     }
+    $('#sCheck', body).onchange = e => { st.checkinDay = e.target.value === 'off' ? null : +e.target.value; save(); toast(st.checkinDay == null ? 'Check-in reminder off' : `Check-in reminder on ${WEEKDAYS[st.checkinDay]}s`); };
     $('#sExport', body).onclick = exportBackup;
     $('#sImport', body).onclick = () => $('#filePick').click();
     $('#sWipe', body).onclick = async () => {
@@ -79,7 +83,7 @@ function settingsSheet() {
 }
 
 function syncNotifConfig() {
-  if (NATIVE) NATIVE.setNotifConfig(JSON.stringify({ enabled: S.settings.notifOn, time: S.settings.notifTime, groupTitle: '{n} payments coming up' }));
+  if (NATIVE) NATIVE.setNotifConfig(JSON.stringify({ enabled: S.settings.notifOn, time: S.settings.notifTime, groupTitle: '{n} things coming up' }));
 }
 
 // ---- backup ----

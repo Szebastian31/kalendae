@@ -1,6 +1,6 @@
 // Kalendae offline cache. Bump VERSION whenever you change a file so phones pick up the update.
-const VERSION = "kalendae-v3";
-const FILES = ["./", "index.html", "store.js", "money.js", "banks.js", "items.js", "ui.js", "accounts.js", "commit.js", "today.js", "forecast.js", "settings.js", "app.js", "manifest.webmanifest", "icons/icon.js", "icons/icon.svg",
+const VERSION = "kalendae-v4";
+const FILES = ["./", "index.html", "store.js", "money.js", "banks.js", "items.js", "subs.js", "ui.js", "accounts.js", "commit.js", "today.js", "forecast.js", "checkin.js", "notify.js", "settings.js", "app.js", "manifest.webmanifest", "icons/icon.js", "icons/icon.svg",
   "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "icons/apple-touch-icon.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(VERSION).then(c => Promise.all(FILES.map(f => c.add(f).catch(() => {})))).then(() => self.skipWaiting()));
