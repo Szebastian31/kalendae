@@ -241,6 +241,31 @@ public class MainActivity extends Activity {
             }
         }
 
+        /** Downloads the exchange-rate table. Only the National Bank of Poland's API is allowed. */
+        @JavascriptInterface
+        public String fetchRates(String url) {
+            try {
+                java.net.URL u = new java.net.URL(url);
+                if (!"https".equals(u.getProtocol()) || !"api.nbp.pl".equals(u.getHost())) return "";
+                java.net.HttpURLConnection cn = (java.net.HttpURLConnection) u.openConnection();
+                cn.setConnectTimeout(10000);
+                cn.setReadTimeout(12000);
+                cn.setRequestProperty("Accept", "application/json");
+                if (cn.getResponseCode() != 200) return "";
+                try (java.io.InputStream in = cn.getInputStream()) {
+                    java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+                    byte[] buf = new byte[8192];
+                    int n;
+                    while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+                    return out.toString("UTF-8");
+                } finally {
+                    cn.disconnect();
+                }
+            } catch (Exception e) {
+                return "";
+            }
+        }
+
         @JavascriptInterface
         public String version() {
             try {

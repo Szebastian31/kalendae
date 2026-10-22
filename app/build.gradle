@@ -10,8 +10,22 @@ android {
         applicationId "com.kalendae.money"
         minSdk 29
         targetSdk 34
-        versionCode 1
-        versionName "0.1.0"
+        versionCode 2
+        versionName "0.2.0"
+    }
+
+    // One fixed key (debug.keystore in the repo root, a copy of Fidelis's fidelis-debug.keystore), so every
+    // new APK installs over the old one and keeps your data. Without it, each build gets a random key.
+    def fixedKey = rootProject.file('debug.keystore')
+    signingConfigs {
+        debug {
+            if (fixedKey.exists()) {
+                storeFile fixedKey
+                storePassword 'fidelis123'
+                keyAlias 'fidelis'
+                keyPassword 'fidelis123'
+            }
+        }
     }
 
     buildTypes {
@@ -19,8 +33,7 @@ android {
             minifyEnabled false
         }
         debug {
-            // debug builds are signed with the auto-generated debug key,
-            // which is all that's needed to sideload onto a personal phone.
+            signingConfig signingConfigs.debug
         }
     }
 
