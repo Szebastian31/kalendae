@@ -110,7 +110,7 @@ public class MoneyNotifier extends BroadcastReceiver {
     }
 
     /** The phone was off at notification time: tell today's news once it's back on. */
-    static void catchUp(Context c) {
+    static void catchUp(Context c) throws Exception {
         if (!isEnabled(c)) return;
         String[] hm = time(c).split(":");
         Calendar now = Calendar.getInstance();
