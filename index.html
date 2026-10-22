@@ -48,7 +48,7 @@ button,input,select{font:inherit;color:inherit}
 .num{font-variant-numeric:tabular-nums lining-nums}
 
 /* layout */
-#scroll{position:fixed;inset:0;overflow-y:auto;padding:calc(env(safe-area-inset-top) + 14px) 18px calc(env(safe-area-inset-bottom) + 112px);scrollbar-width:none}
+#scroll{position:fixed;inset:0;overflow-y:auto;padding:calc(env(safe-area-inset-top) + 14px) 18px calc(env(safe-area-inset-bottom) + 168px);scrollbar-width:none}
 #scroll::-webkit-scrollbar{display:none}
 main{max-width:480px;margin:0 auto}
 header.top{display:flex;align-items:center;gap:11px;margin:4px 0 6px}
@@ -250,6 +250,21 @@ nav.tabs button.on svg{color:var(--gold)}
 /* right-to-left (Arabic): mirror the layout, keep charts, rings and number bars reading left to right */
 [dir=rtl] .orbitWrap,[dir=rtl] .chartWrap,[dir=rtl] .mix,[dir=rtl] .planbar{direction:ltr}
 [dir=rtl] .sw-t.on::after{transform:translateX(-18px)}[dir=rtl] .sw-t::after{left:auto;right:3px}
+
+/* spending: the quick "log a spend" button, receipts */
+.fab{position:fixed;right:max(22px,calc(50% - 226px + 8px));bottom:calc(env(safe-area-inset-bottom) + 92px);z-index:21;width:54px;height:54px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--r1),var(--r2) 45%,var(--r3));color:var(--onInk);box-shadow:0 14px 28px -10px var(--ringGlow),0 8px 18px -8px rgba(0,0,0,.45)}
+.fab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.fab[hidden]{display:none}
+[dir=rtl] .fab{right:auto;left:max(22px,calc(50% - 226px + 8px))}
+.spendCard{background:linear-gradient(160deg,color-mix(in srgb,var(--a3) 14%,transparent),transparent 75%) padding-box,var(--edge) border-box}
+.rcpt{display:inline-grid;place-items:center;margin-inline-start:6px;vertical-align:-2px;color:var(--gold)}
+.rcpt svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.rcptBox{display:flex;gap:12px;align-items:flex-start}
+.rcptBox img{width:96px;height:128px;object-fit:cover;border-radius:14px;border:1px solid var(--line);background:var(--tile);cursor:zoom-in;flex:none}
+.rcptBtns{display:flex;flex-wrap:wrap;gap:6px}.rcptBtns .btn{padding:8px 12px;font-size:13px}
+.viewer{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.88);display:grid;place-items:center;padding:20px;cursor:zoom-out}
+.viewer img{max-width:100%;max-height:100%;border-radius:10px}
 </style>
 </head>
 <body>
@@ -276,24 +291,27 @@ nav.tabs button.on svg{color:var(--gold)}
 
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet"><div class="grab"></div><div id="sheetBody"></div></div>
+<button class="fab" id="fab" aria-label="Log a spend" data-t-aria="Log a spend" hidden><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
 <div id="toast"></div>
 <input type="file" id="filePick" accept=".json,application/json,*/*" hidden>
+<input type="file" id="receiptPick" accept="image/*" hidden>
 
-<script src="i18n.js"></script>
+<script src="js/i18n.js"></script>
 <script src="icons/icon.js"></script>
-<script src="store.js"></script>
-<script src="money.js"></script>
-<script src="banks.js"></script>
-<script src="items.js"></script>
-<script src="subs.js"></script>
-<script src="ui.js"></script>
-<script src="accounts.js"></script>
-<script src="commit.js"></script>
-<script src="today.js"></script>
-<script src="forecast.js"></script>
-<script src="checkin.js"></script>
-<script src="notify.js"></script>
-<script src="settings.js"></script>
-<script src="app.js"></script>
+<script src="js/store.js"></script>
+<script src="js/money.js"></script>
+<script src="js/banks.js"></script>
+<script src="js/items.js"></script>
+<script src="js/subs.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/accounts.js"></script>
+<script src="js/commit.js"></script>
+<script src="js/spend.js"></script>
+<script src="js/today.js"></script>
+<script src="js/forecast.js"></script>
+<script src="js/checkin.js"></script>
+<script src="js/notify.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
