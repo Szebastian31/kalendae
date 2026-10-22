@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Kalendae · Night Wallet. Same drawing as icons/icon.js -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#070d26"/><stop offset=".55" stop-color="#1b2a63"/><stop offset="1" stop-color="#3a4f92"/></linearGradient>
+    <radialGradient id="dusk" cx=".5" cy="1.08" r=".78"><stop offset="0" stop-color="#ffb36b" stop-opacity=".75"/><stop offset=".3" stop-color="#e0828e" stop-opacity=".45"/><stop offset=".62" stop-color="#77479a" stop-opacity=".22"/><stop offset="1" stop-color="#77479a" stop-opacity="0"/></radialGradient>
+    <radialGradient id="sun" cx=".38" cy=".28" r=".85"><stop offset="0" stop-color="#ffffff" stop-opacity=".92"/><stop offset=".45" stop-color="#dfe6f2" stop-opacity=".72"/><stop offset="1" stop-color="#8f9bb3" stop-opacity=".5"/></radialGradient>
+    <radialGradient id="sun2" cx=".38" cy=".28" r=".85"><stop offset="0" stop-color="#ffffff" stop-opacity=".85"/><stop offset=".5" stop-color="#d3dbe8" stop-opacity=".62"/><stop offset="1" stop-color="#7f8aa3" stop-opacity=".45"/></radialGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".34"/><stop offset=".55" stop-color="#fff" stop-opacity=".1"/><stop offset="1" stop-color="#bfe6ff" stop-opacity=".16"/></linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".5" stop-color="#fff" stop-opacity=".25"/><stop offset="1" stop-color="#fff" stop-opacity=".55"/></linearGradient>
+    <linearGradient id="tab" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".42"/><stop offset="1" stop-color="#fff" stop-opacity=".14"/></linearGradient>
+    <filter id="blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="16"/></filter>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="14"/></filter>
+    <clipPath id="clip"><rect width="1024" height="1024" rx="228"/></clipPath>
+    <clipPath id="wal"><rect x="214" y="452" width="596" height="360" rx="76"/></clipPath>
+    <mask id="moon"><rect width="1024" height="1024" fill="black"/><circle cx="702" cy="640" r="40" fill="white"/><circle cx="722" cy="624" r="34" fill="black"/></mask>
+    <g id="coins">
+      <circle cx="604" cy="414" r="146" fill="url(#sun)" stroke="#fff" stroke-opacity=".7" stroke-width="4"/>
+      <circle cx="604" cy="414" r="124" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="5" stroke-dasharray="3 11"/>
+      <circle cx="420" cy="452" r="108" fill="url(#sun2)" stroke="#fff" stroke-opacity=".6" stroke-width="3.5"/>
+      <circle cx="420" cy="452" r="90" fill="none" stroke="#fff" stroke-opacity=".4" stroke-width="4" stroke-dasharray="3 10"/>
+    </g>
+  </defs>
+  <g clip-path="url(#clip)">
+    <rect width="1024" height="1024" fill="url(#bg)"/>
+    <rect width="1024" height="1024" fill="url(#dusk)"/>
+    <g fill="#fff" opacity=".8">
+      <circle cx="160" cy="150" r="5"/><circle cx="272" cy="96" r="3.5"/><circle cx="846" cy="140" r="5"/><circle cx="920" cy="290" r="3"/>
+      <circle cx="734" cy="80" r="3"/><circle cx="100" cy="330" r="3"/><circle cx="934" cy="470" r="2.6"/><circle cx="520" cy="70" r="2.6"/>
+    </g>
+    <circle cx="604" cy="414" r="180" fill="#e6eeff" opacity=".2" filter="url(#glow)"/>
+    <circle cx="420" cy="452" r="132" fill="#e6eeff" opacity=".14" filter="url(#glow)"/>
+    <use href="#coins"/>
+    <rect x="214" y="478" width="596" height="360" rx="76" fill="#030616" opacity=".35" filter="url(#blur)"/>
+    <g clip-path="url(#wal)">
+      <rect width="1024" height="1024" fill="url(#bg)" opacity=".55"/>
+      <g filter="url(#blur)" opacity=".85"><use href="#coins"/></g>
+      <rect width="1024" height="1024" fill="url(#glass)"/>
+      <ellipse cx="380" cy="440" rx="300" ry="90" fill="#fff" opacity=".1"/>
+    </g>
+    <rect x="214" y="452" width="596" height="360" rx="76" fill="none" stroke="url(#edge)" stroke-width="6"/>
+    <rect x="244" y="482" width="536" height="300" rx="50" fill="none" stroke="#fff" stroke-opacity=".32" stroke-width="5" stroke-dasharray="14 13"/>
+    <rect x="618" y="570" width="262" height="140" rx="70" fill="#0b1433" opacity=".35" filter="url(#blur)"/>
+    <rect x="618" y="566" width="262" height="140" rx="70" fill="url(#tab)"/>
+    <rect x="618" y="566" width="262" height="140" rx="70" fill="none" stroke="url(#edge)" stroke-width="5"/>
+    <circle cx="702" cy="636" r="46" fill="#fff" opacity=".18" filter="url(#glow)"/>
+    <rect width="1024" height="1024" fill="#fff" mask="url(#moon)"/>
+    <circle cx="806" cy="636" r="9" fill="#fff" opacity=".7"/>
+  </g>
+</svg>

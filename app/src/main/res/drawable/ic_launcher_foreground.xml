@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- the Night Wallet from icons/icon.svg (1024 grid), scaled into the adaptive-icon safe zone.
+     Vector drawables can't blur, so the glow is a soft halo and the glass is a light tint. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="1024"
+    android:viewportHeight="1024">
+    <group android:pivotX="512" android:pivotY="560" android:scaleX="0.72" android:scaleY="0.72" android:translateY="-20">
+        <!-- coin glow -->
+        <path android:pathData="M394,414a210,210 0,1 0,420 0a210,210 0,1 0,-420 0z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="radial" android:centerX="604" android:centerY="414" android:gradientRadius="210">
+                    <item android:offset="0.55" android:color="#33E6EEFF" />
+                    <item android:offset="1" android:color="#00E6EEFF" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <!-- silver coins -->
+        <path android:strokeColor="#B3FFFFFF" android:strokeWidth="4" android:pathData="M458,414a146,146 0,1 0,292 0a146,146 0,1 0,-292 0z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="radial" android:centerX="560" android:centerY="372" android:gradientRadius="250">
+                    <item android:offset="0" android:color="#EBFFFFFF" />
+                    <item android:offset="0.45" android:color="#B8DFE6F2" />
+                    <item android:offset="1" android:color="#808F9BB3" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path android:strokeColor="#73FFFFFF" android:strokeWidth="5" android:fillColor="#00000000" android:pathData="M480,414a124,124 0,1 0,248 0a124,124 0,1 0,-248 0z" />
+        <path android:strokeColor="#99FFFFFF" android:strokeWidth="3.5" android:pathData="M312,452a108,108 0,1 0,216 0a108,108 0,1 0,-216 0z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="radial" android:centerX="390" android:centerY="420" android:gradientRadius="185">
+                    <item android:offset="0" android:color="#D9FFFFFF" />
+                    <item android:offset="0.5" android:color="#9ED3DBE8" />
+                    <item android:offset="1" android:color="#737F8AA3" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <!-- frosted wallet body -->
+        <path android:pathData="M290,452h444a76,76 0,0 1,76 76v208a76,76 0,0 1,-76 76h-444a76,76 0,0 1,-76 -76v-208a76,76 0,0 1,76 -76z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="linear" android:startX="214" android:startY="452" android:endX="810" android:endY="812">
+                    <item android:offset="0" android:color="#C2566A9E" />
+                    <item android:offset="0.55" android:color="#B3304483" />
+                    <item android:offset="1" android:color="#BF4A6AA8" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path android:strokeWidth="6" android:fillColor="#00000000" android:pathData="M290,452h444a76,76 0,0 1,76 76v208a76,76 0,0 1,-76 76h-444a76,76 0,0 1,-76 -76v-208a76,76 0,0 1,76 -76z">
+            <aapt:attr name="android:strokeColor">
+                <gradient android:type="linear" android:startX="214" android:startY="452" android:endX="810" android:endY="812">
+                    <item android:offset="0" android:color="#F2FFFFFF" />
+                    <item android:offset="0.5" android:color="#40FFFFFF" />
+                    <item android:offset="1" android:color="#8CFFFFFF" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <!-- stitching -->
+        <path android:strokeColor="#52FFFFFF" android:strokeWidth="5" android:fillColor="#00000000"
+            android:strokeLineCap="round"
+            android:pathData="M294,482h436a50,50 0,0 1,50 50v200a50,50 0,0 1,-50 50h-436a50,50 0,0 1,-50 -50v-200a50,50 0,0 1,50 -50z" />
+        <!-- clasp -->
+        <path android:fillColor="#59FFFFFF" android:pathData="M688,566h122a70,70 0,0 1,0 140h-122a70,70 0,0 1,0 -140z" />
+        <path android:strokeColor="#CCFFFFFF" android:strokeWidth="5" android:fillColor="#00000000" android:pathData="M688,566h122a70,70 0,0 1,0 140h-122a70,70 0,0 1,0 -140z" />
+        <!-- crescent: outer arc of the moon, then the inner arc of the circle that shades it -->
+        <path android:fillColor="#FFFFFFFF"
+            android:pathData="M697.68,600.23A40,40 0,1 0,739.86 652.93A34,34 0,0 1,697.68 600.23z" />
+        <path android:fillColor="#B3FFFFFF" android:pathData="M797,636a9,9 0,1 0,18 0a9,9 0,1 0,-18 0z" />
+    </group>
+</vector>
