@@ -4,7 +4,7 @@
 #
 #   tools/screenshots.sh              English, Night look
 #   tools/screenshots.sh pl           Polish
-#   tools/screenshots.sh en dawn      English, Dawn look (night, dawn or paper)
+#   tools/screenshots.sh en dawn      English, Dawn look (night, dawn, aurora, ocean, midnight or paper)
 
 cd "$(dirname "$0")/.."
 LANG_CODE="${1:-en}"

@@ -3,25 +3,30 @@
 <head>
 <meta charset="utf-8">
 <title>Kalendae banner</title>
-<!-- The README banner: five real screens in phone frames. tools/screenshots.sh turns this page into screenshots/banner.png. -->
+<!-- The README banner: five real screens in phone frames. tools/screenshots.sh turns this page into screenshots/banner.png.
+     The colours follow the app's six looks (index.html). -->
 <style>
-  :root{--top:#070d26;--mid:#14215a;--bot:#2b3d7e;--glow:rgba(143,214,255,.22);--ink:#eef3ff;--muted:rgba(238,243,255,.62);--gold:#ffcf9e}
-  [data-look=dawn]{--top:#2a1b6a;--mid:#77479a;--bot:#e0828e;--glow:rgba(255,205,150,.45);--ink:#f4f0ff;--muted:rgba(244,240,255,.7);--gold:#ffe2bc}
-  [data-look=paper]{--top:#f7f1e6;--mid:#f1e7d8;--bot:#ecdcca;--glow:rgba(255,180,150,.35);--ink:#22182e;--muted:rgba(34,24,46,.6);--gold:#b4532a}
+  :root{--top:#070d26;--mid:#14215a;--bot:#2b3d7e;--b1:rgba(143,214,255,.26);--b2:rgba(185,168,255,.22);--b3:rgba(255,159,180,.18);--ink:#eef3ff;--muted:rgba(238,243,255,.64)}
+  [data-look=dawn]{--top:#2a1b6a;--mid:#77479a;--bot:#e0828e;--b1:rgba(255,205,150,.36);--b2:rgba(255,159,180,.28);--b3:rgba(169,200,255,.24);--ink:#f4f0ff;--muted:rgba(244,240,255,.72)}
+  [data-look=aurora]{--top:#03141a;--mid:#08343a;--bot:#0f5552;--b1:rgba(70,240,170,.28);--b2:rgba(140,110,255,.26);--b3:rgba(60,200,255,.18);--ink:#eafff6;--muted:rgba(234,255,246,.66)}
+  [data-look=ocean]{--top:#021222;--mid:#06345a;--bot:#0b6a8e;--b1:rgba(90,210,255,.28);--b2:rgba(80,120,255,.22);--b3:rgba(255,210,150,.16);--ink:#ecf8ff;--muted:rgba(236,248,255,.66)}
+  [data-look=midnight]{--top:#000;--mid:#04050a;--bot:#0a0c16;--b1:rgba(130,110,255,.22);--b2:rgba(80,160,255,.14);--b3:rgba(255,120,170,.12);--ink:#f1f1f6;--muted:rgba(241,241,246,.6)}
+  [data-look=paper]{--top:#f7f1e6;--mid:#f1e7d8;--bot:#ecdcca;--b1:rgba(255,180,150,.4);--b2:rgba(180,170,255,.26);--b3:rgba(255,220,170,.44);--ink:#22182e;--muted:rgba(34,24,46,.62)}
   *{box-sizing:border-box;margin:0}
   html,body{width:1280px;height:720px;overflow:hidden}
-  body{font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;color:var(--ink);
-    background:radial-gradient(70% 60% at 50% 0%,var(--glow),transparent 70%),linear-gradient(180deg,var(--top),var(--mid) 60%,var(--bot))}
+  body{font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;
+    background:radial-gradient(50% 60% at 14% 6%,var(--b1),transparent 70%),radial-gradient(45% 55% at 90% 30%,var(--b2),transparent 70%),
+      radial-gradient(60% 50% at 40% 104%,var(--b3),transparent 70%),linear-gradient(180deg,var(--top),var(--mid) 60%,var(--bot))}
   header{position:absolute;left:0;right:0;top:44px;text-align:center}
   header .row{display:inline-flex;align-items:center;gap:16px}
   header .ico{width:58px;height:58px;border-radius:16px;overflow:hidden;box-shadow:0 10px 24px -10px rgba(0,0,0,.6)}
   header .ico svg{width:100%;height:100%;display:block}
-  h1{font-family:"New York","Iowan Old Style",Palatino,Georgia,serif;font-weight:400;font-size:56px;letter-spacing:-1px;line-height:1}
-  header p{margin-top:12px;font-size:19px;color:var(--muted)}
+  h1{font-family:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;font-weight:700;font-size:58px;letter-spacing:-2px;line-height:1}
+  header p{margin-top:12px;font-size:19px;font-weight:500;color:var(--muted)}
   .phones{position:absolute;left:0;right:0;top:200px;height:640px}
-  .phone{position:absolute;top:0;width:250px;aspect-ratio:390/844;border-radius:40px;padding:9px;background:#0a0d18;
+  .phone{position:absolute;top:0;width:250px;aspect-ratio:390/844;border-radius:42px;padding:9px;background:#0a0d18;
     box-shadow:0 0 0 1.5px rgba(255,255,255,.18) inset,0 40px 70px -30px rgba(0,0,0,.75),0 0 0 1px rgba(0,0,0,.4)}
-  .phone img{display:block;width:100%;height:100%;border-radius:32px;object-fit:cover;object-position:top}
+  .phone img{display:block;width:100%;height:100%;border-radius:34px;object-fit:cover;object-position:top}
   .phone::before{content:"";position:absolute;top:18px;left:50%;width:74px;height:22px;margin-left:-37px;border-radius:12px;background:#0a0d18;z-index:2}
   .p1{left:110px;transform:translateY(70px) rotate(-6deg)}
   .p2{left:330px;transform:translateY(26px) rotate(-2.5deg)}
