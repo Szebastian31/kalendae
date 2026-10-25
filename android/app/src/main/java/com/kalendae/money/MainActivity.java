@@ -21,6 +21,7 @@ import android.view.View;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
+import android.window.OnBackInvokedDispatcher;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -161,6 +162,9 @@ public class MainActivity extends Activity {
             }
         });
         web.addJavascriptInterface(new Bridge(), "KalendaeNative");
+        // Android 16 no longer calls onBackPressed for apps targeting it; back arrives here instead
+        if (Build.VERSION.SDK_INT >= 33)
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::goBack);
 
         if (state != null) web.restoreState(state);
         else web.loadUrl(START);
@@ -219,9 +223,15 @@ public class MainActivity extends Activity {
         super.onPause();
     }
 
+    /** Back (Android 15 and older) */
     @Override
     @SuppressWarnings("deprecation")
     public void onBackPressed() {
+        goBack();
+    }
+
+    /** Back closes an open sheet first; otherwise Kalendae goes to the background instead of quitting. */
+    private void goBack() {
         web.evaluateJavascript("window.kalendaeBack?kalendaeBack():false", v -> {
             if (!"true".equals(v)) moveTaskToBack(true);
         });
