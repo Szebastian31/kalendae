@@ -166,17 +166,16 @@ function spendCardHtml() {
   const week = list.filter(sp => sp.d >= weekFrom && sp.d <= today);
   const weekTotal = week.reduce((s, sp) => s + inDisp(sp), 0);
   const usual = accts.reduce((s, a) => s + conv(a.everyday || 0, a.cur) * myShare(a), 0) / 30.44 * 7;
-  const recent = list.slice(-3).reverse();
   const plus = svg('<path d="M12 5v14M5 12h14"/>');
   if (!list.length) return `<div class="card spendCard"><h3>${t('Spending')}</h3>
     <p class="sub">${t('Log a purchase as you make it: the amount comes straight off the account, and you can keep a photo of the receipt for returns, warranties or receipt apps.')}</p>
     <div class="row2"><button class="btn" data-spend="new">${plus} ${t('Log a spend')}</button></div></div>`;
+  // two totals to tap through to everything you logged; logging a new one is the + in the tab bar
   return `<div class="card spendCard"><h3>${t('Spending')} <em>${t('last 7 days')}</em></h3>
     <div class="stats" style="grid-template-columns:repeat(2,minmax(0,1fr))">
-      <div class="stat"><div class="k">${t('Today')}</div><div class="v num">${fmt(dayTotal)}</div></div>
-      <div class="stat"><div class="k">${t('7 days')}</div><div class="v num">${fmt(weekTotal)}</div><div class="s">${usual > 0 ? t('usually about {v}', { v: fmt(usual) }) : '&nbsp;'}</div></div></div>
-    <ul class="list" style="margin-top:6px">${recent.map(spendRow).join('')}</ul>
-    <div class="row2"><button class="btn" data-spend="new">${plus} ${t('Log a spend')}</button><button class="btn ghost" data-spend="all">${t('All spending')}</button></div></div>`;
+      <div class="stat" role="button" data-spend="all"><div class="k">${t('Today')}</div><div class="v num">${fmt(dayTotal)}</div></div>
+      <div class="stat" role="button" data-spend="all"><div class="k">${t('7 days')}</div><div class="v num">${fmt(weekTotal)}</div><div class="s">${usual > 0 ? t('usually about {v}', { v: fmt(usual) }) : '&nbsp;'}</div></div></div>
+    <div class="more-link"><button data-spend="all">${t('All spending')}</button></div></div>`;
 }
 function spendRow(sp) {
   const a = accountById(sp.acct), d = fromISO(sp.d), b = fmtBoth(-sp.amount, sp.cur);
@@ -225,7 +224,7 @@ function spendsSheet(filter = 'all') {
   list.forEach(sp => { const k = sp.d.slice(0, 7); (months[k] = months[k] || []).push(sp); });
   const chips = [['all', t('Everything')], ['receipts', t('With receipts')]].concat(liveAccounts().filter(a => S.spends.some(sp => sp.acct === a.id)).map(a => [a.id, a.name]));
   openSheet(`<h2>${t('All spending')}</h2>
-    <div class="chips" id="spF" style="margin:6px 0 4px">${chips.map(([k, n]) => `<button class="chip ${k === filter ? 'on' : ''}" data-f="${k}">${esc(n)}</button>`).join('')}</div>
+    <div class="chips scroller" id="spF" style="margin-top:6px;margin-bottom:4px">${chips.map(([k, n]) => `<button class="chip ${k === filter ? 'on' : ''}" data-f="${k}">${esc(n)}</button>`).join('')}</div>
     ${list.length ? spendChartHtml(list, filter) : ''}
     ${Object.keys(months).length ? Object.entries(months).map(([k, rows]) => {
       const total = rows.reduce((s, sp) => s + conv(sp.amt, accountById(sp.acct).cur), 0);
@@ -276,13 +275,14 @@ function spendSheet(existing, back, preset) {
       <div class="field"><label>${t('What for')}</label><div class="typegrid" id="sCat">${Object.entries(SPEND_CATS).map(([k, [n, ic]]) =>
         `<button data-k="${k}" class="${k === sp.cat ? 'on' : ''}">${svg(ic)}${n}</button>`).join('')}</div></div>
       <div class="field"><label>${t('Shop or note')}</label><input class="input" id="sNote" value="${esc(sp.note)}" placeholder="${esc(t('Optional · e.g. Lidl, pharmacy, birthday present'))}" autocomplete="off"></div>
-      <div class="field"><label>${t('Date')}</label><input class="input num" id="sDate" type="date" value="${sp.d}" max="${todayISO()}"></div>
+      ${moreBox('spend', `<div class="field"><label>${t('Date')}</label><input class="input num" id="sDate" type="date" value="${sp.d}" max="${todayISO()}"></div>
       <div class="field"><label>${t('Receipt')}</label>
         ${hasPhoto ? `<div class="rcptBox"><img id="sImg" alt="${esc(t('Receipt'))}"><div class="rcptBtns">
             ${existing && existing.receipt && !(photo instanceof Blob) ? `<button class="btn ghost" id="sSaveImg">${t('Save to phone')}</button><button class="btn ghost" id="sShare">${t('Share')}</button>` : ''}
             <button class="btn ghost" id="sPick">${t('Replace')}</button><button class="btn danger" id="sDrop">${t('Remove')}</button></div></div>`
           : `<button class="btn ghost wide" id="sPick">${svg(RECEIPT_ICON)} ${t('Add a receipt photo')}</button>`}
-        <p class="sub" style="margin-top:6px">${t('Kept on this phone with your data. Handy for returns, warranties, or receipt apps like Google Opinion Rewards.')}</p></div>
+        <p class="sub" style="margin-top:6px">${t('Kept on this phone with your data. Handy for returns, warranties, or receipt apps like Google Opinion Rewards.')}</p></div>`,
+        hasPhoto || sp.d !== todayISO())}
       <p class="sub" style="margin-top:14px">${already
         ? t('Already in the balance you typed for {a} on {d}, so it’s kept as a record only.', { a: esc(a.name), d: dfmt(fromISO(a.balanceAt), { day: 'numeric', month: 'short' }) })
         : sp.cat === 'big' ? t('Comes off {a} straight away. A one-off isn’t counted as everyday spending.', { a: esc(a.name) })

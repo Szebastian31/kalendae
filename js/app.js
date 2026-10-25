@@ -1,18 +1,21 @@
 // Kalendae: the shell. Tabs, header, start-up, and keeping everything in sync.
 let CURRENT_TAB = 'today';
+const TAB_TITLES = { today: t('Today'), forecast: t('Forecast'), commit: t('Commitments'), accounts: t('Accounts') };
 
 function showTab(name) {
   CURRENT_TAB = name;
-  $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+  $$('#tabs button[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
   $$('.view').forEach(v => v.classList.toggle('on', v.dataset.view === name));
+  $('#title').textContent = TAB_TITLES[name];
   $('#scroll').scrollTop = 0;
   if (name === 'forecast') renderForecast(); // the chart needs to be visible to measure itself
 }
-$$('#tabs button').forEach(b => b.onclick = () => { tick('8'); showTab(b.dataset.tab); });
+$$('#tabs button[data-tab]').forEach(b => b.onclick = () => { tick('8'); showTab(b.dataset.tab); });
 
 function renderHeader() {
-  $('#headIcon').innerHTML = iconSVG({ size: 38 });
+  $('#headIcon').innerHTML = iconSVG({ size: 28 });
   $('#today').textContent = dateLong();
+  $('#title').textContent = TAB_TITLES[CURRENT_TAB];
   $('#curPill').innerHTML = `${S.settings.display}${S.settings.currencies.length > 1 ? ' <span class="muted">▾</span>' : ''}`;
 }
 // tap the currency pill to flip through the currencies you use
@@ -25,6 +28,8 @@ $('#curPill').onclick = () => {
 };
 $('#openSettings').onclick = settingsSheet;
 $("#fab").onclick = () => { tick("8"); spendSheet(); };
+// once the page scrolls, a strip of glass appears behind the status bar so the clock stays readable
+$('#scroll').addEventListener('scroll', () => document.body.classList.toggle('scrolled', $('#scroll').scrollTop > 6), { passive: true });
 
 function renderAll() {
   applyLook();

@@ -534,3 +534,13 @@ Object.assign(I18N.te, {
   "Kalendae {v} · the only things it downloads are public exchange rates (NBP, Frankfurter and currency-api). Nothing about you is sent.": "Kalendae {v} · పబ్లిక్ మారకపు రేట్లను మాత్రమే డౌన్‌లోడ్ చేస్తుంది (NBP, Frankfurter, currency-api). మీ గురించి ఏదీ పంపబడదు.",
   "Couldn’t download the rates": "రేట్లను డౌన్‌లోడ్ చేయలేకపోయాం",
 });
+// 1.3: the redesign (one list for commitments, folded form options, three new looks)
+Object.assign(I18N.te, {
+  "Moves": "బదిలీలు",
+  "All": "అన్నీ",
+  "See all": "అన్నీ చూడండి",
+  "Aurora": "అరోరా",
+  "Ocean": "సముద్రం",
+  "Midnight": "అర్ధరాత్రి",
+  "More options": "మరిన్ని ఎంపికలు",
+});

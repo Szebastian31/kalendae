@@ -30,6 +30,7 @@ function itemRow(it) {
     <div class="amt num ${sign > 0 ? 'pos' : ''}">${sign > 0 ? '+' : ''}${b.main}${b.approx ? `<small>${b.approx}</small>` : ''}${vd ? `<span class="verdict" style="color:${VERDICT[vd][1]}">${VERDICT[vd][0]}</span>` : ''}</div></li>`;
 }
 
+let cmKind = 'all'; // which commitments the list shows: all, or one kind
 function renderCommit() {
   const v = $('#vCommit');
   if (!liveAccounts().length) {
@@ -46,7 +47,7 @@ function renderCommit() {
     const k = nextIn(it), a = accountById(it.acct);
     return `<div class="card trial" data-id="${it.id}"><h3>${t('Trial ends')} <em>${inDaysText(k)}</em></h3>
       <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px">
-        <div><div style="font-family:var(--serif);font-size:24px;line-height:1.1">${esc(it.name)}</div>
+        <div><div style="font-family:var(--display);font-weight:700;font-size:24px;letter-spacing:-.5px;line-height:1.1">${esc(it.name)}</div>
         <div class="sub" style="margin-top:4px">${t('Becomes {v} on {d}, from {a}', { v: `<b class="num">${fmt(it.amount, itemCur(it))} ${perText(it)}</b>`, d: dfmt(dateIn(k), { weekday: 'short', day: 'numeric', month: 'short' }), a: esc(a.name) })}</div></div>
         ${ringSvg([k > 3, k > 1, k > 0, true].map(Boolean), 54, k <= 3 ? 'var(--warn)' : 'var(--good)')}</div>
       <div class="row2"><button class="btn ghost" data-act="cancelled" data-id="${it.id}">${t('I cancelled it')}</button><button class="btn" data-act="keep" data-id="${it.id}">${t('Keep it')}</button></div></div>`;
@@ -63,34 +64,41 @@ function renderCommit() {
       <div class="stat"><div class="k">${t('Bills')}</div><div class="v num">${fmt(bills)}</div><div class="s">${t('a month')}</div></div>
       <div class="stat"><div class="k">${t('Subscriptions')}</div><div class="v num">${fmt(subs)}</div><div class="s">${t('{v} a year', { v: fmt(subs * 12) })}</div></div></div>
       <p class="sub" style="margin-top:10px">${t('Monthly equivalents: a yearly bill counts as 1/12 here.')}${S.accounts.some(a => a.shared) ? ' ' + t('Shared accounts are counted in full.') : ''}</p></div>`;
-    // subscriptions worth a second look
+    // subscriptions worth a second look: one row that takes you to them
     const look = items.filter(it => it.kind === 'sub' && !isTrialNow(it) && !it.paused && !isCancelled(it) && subVerdict(it) !== 'k');
     if (look.length) {
       const yearly = look.reduce((s, it) => s + conv(perMonth(it), itemCur(it)) * 12, 0);
       const unrated = look.filter(it => !it.usage).length;
-      html += `<div class="card"><h3>${t('Worth a look')} <em>${t('{v} a year', { v: fmt(yearly) })}</em></h3>
-        <div class="agree">${ringSvg(items.filter(it => it.kind === 'sub' && !isTrialNow(it) && !it.paused && !isCancelled(it)).map(it => subVerdict(it) === 'k'), 78)}
-        <p class="sub">${tn(look.length, '{n} subscription got a review or cancel vote: {names}.', '{n} subscriptions got a review or cancel vote: {names}.',
-          { names: look.slice(0, 3).map(it => `<b>${esc(it.name)}</b>`).join(', ') + (look.length > 3 ? '…' : '') })}
-        ${unrated ? tn(unrated, 'Rate how often you use it for a fairer vote.', 'Rate how often you use them for a fairer vote.') : t('Tap one to see why.')}</p></div></div>`;
+      html += `<div class="card alerts">${alertRow('id="cLook"', KINDS.sub.icon, 'var(--warn)', `${t('Worth a look')} · ${t('{v} a year', { v: fmt(yearly) })}`,
+        tn(look.length, '{n} subscription got a review or cancel vote: {names}.', '{n} subscriptions got a review or cancel vote: {names}.',
+          { names: look.slice(0, 3).map(it => esc(it.name)).join(', ') + (look.length > 3 ? '…' : '') }) + ' ' +
+        (unrated ? tn(unrated, 'Rate how often you use it for a fairer vote.', 'Rate how often you use them for a fairer vote.') : t('Tap one to see why.')))}</div>`;
     }
-    ['sub', 'bill', 'income', 'move'].forEach(kind => {
-      const list = items.filter(it => it.kind === kind).sort((x, y) => (nextIn(x) ?? 9999) - (nextIn(y) ?? 9999));
-      if (!list.length) return;
-      html += `<div class="card"><h3>${KINDS[kind].many} <em>${list.length}</em></h3><ul class="list">${list.map(itemRow).join('')}</ul></div>`;
-    });
-    html += `<div class="kindgrid" style="margin-top:14px">${Object.entries(KINDS).map(([k, d]) => `<button data-new="${k}">${svg('<path d="M12 5v14M5 12h14"/>')}${d.one}</button>`).join('')}</div>`;
+    // one list, filtered by kind
+    const kinds = ['sub', 'bill', 'income', 'move'].filter(k => items.some(it => it.kind === k));
+    if (cmKind !== 'all' && !kinds.includes(cmKind)) cmKind = 'all';
+    const byDate = list => list.sort((x, y) => (nextIn(x) ?? 9999) - (nextIn(y) ?? 9999));
+    const label = k => k === 'move' ? t('Moves') : KINDS[k].many;
+    html += `<div class="seg scroller" id="cKind" style="margin-top:16px">${[['all', t('All')]].concat(kinds.map(k => [k, label(k)])).map(([k, n]) =>
+      `<button data-k="${k}" class="${k === cmKind ? 'on' : ''}">${n}</button>`).join('')}</div>
+      <div class="card" style="margin-top:10px">${cmKind === 'all'
+        ? kinds.map(k => { const list = byDate(items.filter(it => it.kind === k)); return `<div class="grp" style="display:flex;justify-content:space-between"><span>${label(k)}</span><span>${list.length}</span></div><ul class="list">${list.map(itemRow).join('')}</ul>`; }).join('')
+        : `<ul class="list">${byDate(items.filter(it => it.kind === cmKind)).map(itemRow).join('')}</ul>`}
+        <button class="btn ghost wide" id="cAdd" style="margin-top:12px">${svg('<path d="M12 5v14M5 12h14"/>')} ${cmKind === 'all' ? t('Add') : NEW_KIND[cmKind]}</button></div>`;
   }
   // like the subscriptions page in Google Play: what you've cancelled, when it ran out, and a way back
-  if (ended.length) html += `<div class="card"><h3>${t('Cancelled')} <em>${ended.length}</em></h3><ul class="list">${ended.sort((x, y) => y.until.localeCompare(x.until)).map(it => {
+  if (ended.length) html += `<details class="card"><summary><h3>${t('Cancelled')} <em>${ended.length}</em></h3></summary><ul class="list">${ended.sort((x, y) => y.until.localeCompare(x.until)).map(it => {
     const d = fromISO(it.until), a = accountById(it.acct);
     return `<li class="it" data-ended="${it.id}"><div class="when">${dfmt(d, { month: 'short' })}<b>${d.getDate()}</b></div>
       <div><div class="nm">${esc(it.name)}</div><div class="meta"><span class="dot" style="background:${accColor(a)}"></span>${t('Expired {d}', { d: dfmt(d, { day: 'numeric', month: 'short', year: 'numeric' }) })} · ${fmt(it.amount, itemCur(it))} ${perText(it)}</div></div>
       <div class="amt"><span class="chip">${t('Renew')}</span></div></li>`;
-  }).join('')}</ul></div>`;
+  }).join('')}</ul></details>`;
   html += `<p class="honest">${t('Dates repeat by themselves: a bill on the 31st lands on the last day of shorter months.')}</p>`;
   v.innerHTML = html;
   $$('[data-new]', v).forEach(b => b.onclick = () => itemSheet(null, b.dataset.new));
+  $$('#cKind [data-k]', v).forEach(b => b.onclick = () => { tick('8'); cmKind = b.dataset.k; renderCommit(); });
+  const add = $('#cAdd', v); if (add) add.onclick = () => itemSheet(null, cmKind === 'all' ? 'sub' : cmKind);
+  const lk = $('#cLook', v); if (lk) lk.onclick = () => { cmKind = 'sub'; renderCommit(); $('#cKind').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
   $$('.it[data-id]', v).forEach(r => r.onclick = () => itemSheet(S.items.find(x => x.id === r.dataset.id)));
   $$('[data-ended]', v).forEach(r => r.onclick = () => renewSheet(S.items.find(x => x.id === r.dataset.ended)));
   $$('[data-act]', v).forEach(b => b.onclick = e => {
@@ -184,23 +192,23 @@ function itemSheet(existing, kind = 'sub', preset = null, title = null) {
       <p class="sub" style="margin-top:6px">${t('A move between your own accounts isn’t spending. “Outside Kalendae” is for money that leaves, like investing.')}</p></div>` : ''}
     <div class="field"><label>${dateLabel()}</label><input class="input num" id="iDate" type="date" value="${it.start}"></div>
     <div class="field"><label>${t('Repeats')}</label><select class="input" id="iRep">${Object.entries(REPEATS).map(([k, [n]]) => `<option value="${k}" ${k === it.repeat ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
-    <div class="field"><label>${t('Notify me')}</label><div class="chips" id="iRem">${Object.entries(REMIND).map(([k, [n]]) =>
-      `<button class="chip ${k === remindOf(it) ? 'on' : ''}" data-r="${k}">${n}</button>`).join('')}</div>
-      ${isTrialNow(it) ? `<p class="sub" style="margin-top:6px">${t('Trials always warn you 2 days before and on the day.')}</p>` : ''}</div>
-    ${it.kind === 'sub' ? `<div class="field"><label>${t('How often do you use it?')}</label><div class="chips" id="iUse">${Object.entries(USAGE).map(([k, [n]]) =>
+    ${it.kind === 'sub' ? `<div class="card" style="margin-top:16px;padding:4px 16px"><div class="tog"><div>${t('Free trial now')}<small>${t('The date above is when it turns paid')}</small></div><button class="sw-t ${it.trial ? 'on' : ''}" id="iTrial"></button></div></div>
+      <div class="field"><label>${t('How often do you use it?')}</label><div class="chips" id="iUse">${Object.entries(USAGE).map(([k, [n]]) =>
         `<button class="chip ${k === it.usage ? 'on' : ''}" data-u="${k}">${n}</button>`).join('')}</div></div>
-      <div class="field"><label>${t('Cheaper plans (optional)')}</label>
-        <div style="display:flex;gap:8px"><input class="input num" id="iAlt" inputmode="decimal" value="${it.alt || ''}" placeholder="${esc(t('Yearly plan, per year'))}">
-        <input class="input num" id="iAltM" inputmode="decimal" value="${it.altMonthly || ''}" placeholder="${esc(t('Cheaper tier, a month'))}"></div>
-        <p class="sub" style="margin-top:6px">${t('In {c}. Kalendae tells you if switching would save money.', { c: itemCur(it) })}</p></div>
       ${existing && !isTrialNow(it) && !isCancelled(it) ? `<div class="why">${(() => { const vd = subVerdict(it); return `<div class="why-h">${ringSvg(subSignals(it).map(s => s[0] === vd), 44, VERDICT[vd][1])}<b style="color:${VERDICT[vd][1]}">${VERDICT[vd][0]}</b></div>`; })()}
         ${subSignals(it).map(([v, k, txt]) => `<div><i style="color:${VERDICT[v][1]}">${k}</i><span>${esc(txt)}</span></div>`).join('')}</div>` : ''}` : ''}
     ${existing && it.varies && it.kind !== 'move' ? actualsHtml() : ''}
-    <div class="card" style="margin-top:16px;padding:6px 16px">
-      ${it.kind === 'sub' ? `<div class="tog"><div>${t('Free trial now')}<small>${t('The date above is when it turns paid')}</small></div><button class="sw-t ${it.trial ? 'on' : ''}" id="iTrial"></button></div>` : ''}
-      ${it.kind !== 'move' ? `<div class="tog"><div>${t('Amount changes')}<small>${t('Like electricity: type an average')}</small></div><button class="sw-t ${it.varies ? 'on' : ''}" id="iVar"></button></div>` : ''}
-      ${existing ? `<div class="tog"><div>${t('Paused')}<small>${t('Kept, but left out of the forecast')}</small></div><button class="sw-t ${it.paused ? 'on' : ''}" id="iPause"></button></div>` : ''}
-    </div>
+    ${moreBox('item', `<div class="field"><label>${t('Notify me')}</label><div class="chips" id="iRem">${Object.entries(REMIND).map(([k, [n]]) =>
+      `<button class="chip ${k === remindOf(it) ? 'on' : ''}" data-r="${k}">${n}</button>`).join('')}</div>
+      ${isTrialNow(it) ? `<p class="sub" style="margin-top:6px">${t('Trials always warn you 2 days before and on the day.')}</p>` : ''}</div>
+      ${it.kind === 'sub' ? `<div class="field"><label>${t('Cheaper plans (optional)')}</label>
+        <div style="display:flex;gap:8px"><input class="input num" id="iAlt" inputmode="decimal" value="${it.alt || ''}" placeholder="${esc(t('Yearly plan, per year'))}">
+        <input class="input num" id="iAltM" inputmode="decimal" value="${it.altMonthly || ''}" placeholder="${esc(t('Cheaper tier, a month'))}"></div>
+        <p class="sub" style="margin-top:6px">${t('In {c}. Kalendae tells you if switching would save money.', { c: itemCur(it) })}</p></div>` : ''}
+      ${it.kind !== 'move' || existing ? `<div class="card" style="padding:0 16px">
+        ${it.kind !== 'move' ? `<div class="tog"><div>${t('Amount changes')}<small>${t('Like electricity: type an average')}</small></div><button class="sw-t ${it.varies ? 'on' : ''}" id="iVar"></button></div>` : ''}
+        ${existing ? `<div class="tog"><div>${t('Paused')}<small>${t('Kept, but left out of the forecast')}</small></div><button class="sw-t ${it.paused ? 'on' : ''}" id="iPause"></button></div>` : ''}
+      </div>` : ''}`, !!(it.remind || it.alt || it.altMonthly || it.paused || (it.varies && !existing)))}
     ${existing && existing.kind === 'sub' ? (isCancelled(existing)
       ? `<p class="sub" style="margin-top:14px">${t('Ends {d}', { d: dfmt(fromISO(existing.until), { day: 'numeric', month: 'short', year: 'numeric' }) })}</p><button class="btn ghost wide" id="iRenew" style="margin-top:8px">${t('Renew')}</button>`
       : `<button class="btn ghost wide" id="iCancelSub" style="margin-top:12px">${t('Cancel subscription')}</button>`) : ''}

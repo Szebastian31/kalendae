@@ -534,3 +534,13 @@ Object.assign(I18N.sw, {
   "Kalendae {v} · the only things it downloads are public exchange rates (NBP, Frankfurter and currency-api). Nothing about you is sent.": "Kalendae {v} · hupakua viwango vya ubadilishaji vya umma pekee (NBP, Frankfurter na currency-api). Hakuna chochote kukuhusu kinachotumwa.",
   "Couldn’t download the rates": "Imeshindwa kupakua viwango",
 });
+// 1.3: the redesign (one list for commitments, folded form options, three new looks)
+Object.assign(I18N.sw, {
+  "Moves": "Uhamisho",
+  "All": "Zote",
+  "See all": "Ona zote",
+  "Aurora": "Aurora",
+  "Ocean": "Bahari",
+  "Midnight": "Usiku wa manane",
+  "More options": "Chaguo zaidi",
+});

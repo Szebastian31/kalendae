@@ -539,3 +539,13 @@ Object.assign(I18N.sv, {
   "Kalendae {v} · the only things it downloads are public exchange rates (NBP, Frankfurter and currency-api). Nothing about you is sent.": "Kalendae {v} · laddar bara ner offentliga växelkurser (NBP, Frankfurter och currency-api). Inget om dig skickas.",
   "Couldn’t download the rates": "Det gick inte att ladda ner kurserna",
 });
+// 1.3: the redesign (one list for commitments, folded form options, three new looks)
+Object.assign(I18N.sv, {
+  "Moves": "Flyttar",
+  "All": "Alla",
+  "See all": "Visa alla",
+  "Aurora": "Norrsken",
+  "Ocean": "Hav",
+  "Midnight": "Midnatt",
+  "More options": "Fler alternativ",
+});

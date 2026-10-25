@@ -539,3 +539,13 @@ Object.assign(I18N.es, {
   "Kalendae {v} · the only things it downloads are public exchange rates (NBP, Frankfurter and currency-api). Nothing about you is sent.": "Kalendae {v} · solo descarga tipos de cambio públicos (NBP, Frankfurter y currency-api). No se envía nada sobre ti.",
   "Couldn’t download the rates": "No se pudieron descargar los tipos",
 });
+// 1.3: the redesign (one list for commitments, folded form options, three new looks)
+Object.assign(I18N.es, {
+  "Moves": "Movimientos",
+  "All": "Todo",
+  "See all": "Ver todo",
+  "Aurora": "Aurora",
+  "Ocean": "Océano",
+  "Midnight": "Medianoche",
+  "More options": "Más opciones",
+});

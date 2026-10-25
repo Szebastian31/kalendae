@@ -539,3 +539,13 @@ Object.assign(I18N.zh, {
   "Kalendae {v} · the only things it downloads are public exchange rates (NBP, Frankfurter and currency-api). Nothing about you is sent.": "Kalendae {v} · 只下载公开汇率（NBP、Frankfurter 和 currency-api）。不会发送任何关于你的信息。",
   "Couldn’t download the rates": "无法下载汇率",
 });
+// 1.3: the redesign (one list for commitments, folded form options, three new looks)
+Object.assign(I18N.zh, {
+  "Moves": "转账",
+  "All": "全部",
+  "See all": "查看全部",
+  "Aurora": "极光",
+  "Ocean": "海洋",
+  "Midnight": "午夜",
+  "More options": "更多选项",
+});

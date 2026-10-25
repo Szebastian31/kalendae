@@ -26,15 +26,20 @@ function renderAccounts() {
   const part = list => list.reduce((s, a) => s + conv(signedBalance(a), a.cur) * myShare(a), 0);
   const grow = accts.filter(a => isGrowth(a) && !countsToSpend(a));
 
-  let html = `<div class="card">
-    <h3>${t('What’s yours')} <em>${tn(accts.length, '{n} account', '{n} accounts')} · ${tn(curs.length, '{n} currency', '{n} currencies')}</em></h3>
+  let html = `<div class="card hero">
+    <div class="k">${t('What’s yours')}</div>
     <div class="big num">${fmt(total)}</div>
+    <div class="sub">${tn(accts.length, '{n} account', '{n} accounts')} · ${tn(curs.length, '{n} currency', '{n} currencies')}</div>
     <div class="mix">${accts.map(a => `<div style="flex:${shareW(a) / mixTotal};background:${accColor(a)}"></div>`).join('')}</div>
-    ${grow.length ? `<div class="stats" style="grid-template-columns:repeat(2,minmax(0,1fr));margin:4px 0 10px">
+    ${grow.length ? `<div class="stats" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-top:12px;text-align:start">
       <div class="stat"><div class="k">${t('Spending money')}</div><div class="v num">${fmt(part(spendingAccounts()))}</div></div>
       <div class="stat"><div class="k">${t('Savings & investments')}</div><div class="v num">${fmt(part(grow))}</div></div></div>` : ''}
-    <div class="sub">${[curs.length > 1 ? t('At 30-day average rates') : '', hasShared ? t('counts only your part of shared accounts') : '', accts.some(a => a.type === 'card') ? t('cards count as money owed') : '']
-      .filter(Boolean).join(' · ') || t('Everything you have, in one number.')}</div></div>`;
+    <div class="sub" style="margin-top:10px">${[curs.length > 1 ? t('At 30-day average rates') : '', hasShared ? t('counts only your part of shared accounts') : '', accts.some(a => a.type === 'card') ? t('cards count as money owed') : '']
+      .filter(Boolean).join(' · ') || t('Everything you have, in one number.')}</div>
+    <div class="quick" style="grid-template-columns:repeat(${accts.length > 1 ? 3 : 2},minmax(0,1fr))">
+      <button class="main" id="checkAll">${svg('<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>')}${t('Check in')}</button>
+      ${accts.length > 1 ? `<button id="moveAcct">${svg(KINDS.move.icon)}${t('Move')}</button>` : ''}
+      <button id="addAcct">${svg('<path d="M12 5v14M5 12h14"/>')}${t('Add')}</button></div></div>`;
 
   html += '<div class="card">';
   GROUP_ORDER.forEach(g => {
@@ -50,12 +55,12 @@ function renderAccounts() {
         <div class="bal num">${b.main}${b.approx ? `<small>${b.approx}</small>` : ''}</div></div>`;
     }).join('');
   });
-  html += `<div class="row2"><button class="btn" id="checkAll">${svg('<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>')} ${t('Check in')}</button>${accts.length > 1 ? `<button class="btn ghost" id="moveAcct">${svg(KINDS.move.icon)} ${t('Move')}</button>` : ''}<button class="btn ghost" id="addAcct">${svg('<path d="M12 5v14M5 12h14"/>')} ${t('Add')}</button></div></div>`;
+  html += '</div>';
 
   if (curs.some(c => c !== S.settings.display)) {
-    html += `<div class="card"><h3>${t('Exchange rates')} <em>${ratesLive() ? t('30-day average') : t('estimate')}</em></h3>
+    html += `<details class="card"><summary><h3>${t('Exchange rates')} <em>${ratesLive() ? t('30-day average') : t('estimate')}</em></h3></summary>
       <div class="rates">${curs.filter(c => c !== S.settings.display).map(c => `<div>${c}<b class="num">${rateLine(c)}</b>${t('±{p}% this month', { p: rateSpread(c).toFixed(1) })}</div>`).join('')}</div>
-      <p class="sub" style="margin-top:10px">${ratesNote()}</p></div>`;
+      <p class="sub" style="margin-top:10px">${ratesNote()}</p></details>`;
   }
   html += `<p class="honest">${t('Check in each week (or tap an account) to update balances; cash accounts get a note-by-note count. Amounts in other currencies carry a ≈; they’re converted at an average, not today’s exact rate.')}</p>`;
   v.innerHTML = html;
@@ -124,14 +129,14 @@ function accountSheet(existing) {
       `<button data-k="${k}" class="${k === a.type ? 'on' : ''}">${svg(type.icon)}${type.label}</button>`).join('')}</div>
     <div class="field"><label id="aBalL">${balLabel()}</label>
       <input class="input money num" id="aBal" inputmode="decimal" value="${a.balance ? a.balance : ''}" placeholder="0"></div>
-    <div class="field"><label>${t('Currency')}</label><select class="input" id="aCur">${curOpts()}</select></div>
     <div class="field"><label>${t('Name')}</label><input class="input" id="aName" value="${esc(a.name)}" placeholder="${esc(t('e.g. Personal, Holiday pot'))}"></div>
-    <div class="field"><label>${t('Bank or service')}</label><input class="input" id="aProv" value="${esc(a.provider || '')}" placeholder="${esc(t('Search or type any name'))}" autocomplete="off">
-      <div class="chips" id="provSug" style="margin-top:8px"></div></div>
+    <div class="field"><label>${t('Currency')}</label><select class="input" id="aCur">${curOpts()}</select></div>
     <div class="field" id="everyBox" style="display:${grows() ? 'none' : 'block'}"><label>${t('Everyday spending a month')}</label>
       <input class="input num" id="aEvery" inputmode="decimal" value="${a.everyday ? a.everyday : ''}" placeholder="${esc(t('Optional · groceries, coffee, fuel…'))}">
       <p class="sub" style="margin-top:6px">${t('A rough guess is fine. The forecast takes it off a little each day; weekly check-ins refine it.')}</p></div>
     <div class="card" id="ruCard" style="margin-top:16px;padding:12px 16px;display:${grows() ? 'block' : 'none'}"><div id="ruBox"></div></div>
+    ${moreBox('acct', `<div class="field"><label>${t('Bank or service')}</label><input class="input" id="aProv" value="${esc(a.provider || '')}" placeholder="${esc(t('Search or type any name'))}" autocomplete="off">
+      <div class="chips" id="provSug" style="margin-top:8px"></div></div>
     <div class="field"><label>${t('Colour')}</label><div class="swatches" id="aColor">${Array.from({ length: ACCOUNT_COLORS }, (_, i) =>
       `<button class="${i === a.color ? 'on' : ''}" data-c="${i}" style="background:var(--a${i + 1})" aria-label="${esc(t('Colour {n}', { n: i + 1 }))}"></button>`).join('')}</div></div>
     <div class="card" style="margin-top:16px;padding:12px 16px">
@@ -144,7 +149,7 @@ function accountSheet(existing) {
             <span class="sub">${t('You')}</span><input type="range" min="5" max="95" step="5" id="aMine" value="${a.split.mine}"><span class="sub num" id="aMineLbl"></span></div>
           <p class="sub" style="margin-top:8px">${t('Only your part counts in “What’s yours”. Both of you will get the warning if it runs short.')}</p></div>
       </div>
-    </div>
+    </div>`, !!a.shared)}
     ${existing && liveAccounts().length > 1 ? `<button class="btn ghost wide" id="aMove" style="margin-top:12px">${svg(KINDS.move.icon)} ${t('Move money')}</button>` : ''}
     <div class="row2">${existing ? `<button class="btn danger" id="aDel">${t('Delete')}</button>` : `<button class="btn ghost" id="aCancel">${t('Cancel')}</button>`}<button class="btn" id="aSave">${t('Save')}</button></div>`;
 

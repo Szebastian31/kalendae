@@ -539,3 +539,13 @@ Object.assign(I18N.el, {
   "Kalendae {v} · the only things it downloads are public exchange rates (NBP, Frankfurter and currency-api). Nothing about you is sent.": "Kalendae {v} · κατεβάζει μόνο δημόσιες ισοτιμίες (NBP, Frankfurter και currency-api). Τίποτα για σένα δεν αποστέλλεται.",
   "Couldn’t download the rates": "Δεν ήταν δυνατή η λήψη των ισοτιμιών",
 });
+// 1.3: the redesign (one list for commitments, folded form options, three new looks)
+Object.assign(I18N.el, {
+  "Moves": "Μεταφορές",
+  "All": "Όλα",
+  "See all": "Προβολή όλων",
+  "Aurora": "Σέλας",
+  "Ocean": "Ωκεανός",
+  "Midnight": "Μεσάνυχτα",
+  "More options": "Περισσότερες επιλογές",
+});

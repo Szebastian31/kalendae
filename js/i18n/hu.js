@@ -534,3 +534,13 @@ Object.assign(I18N.hu, {
   "Kalendae {v} · the only things it downloads are public exchange rates (NBP, Frankfurter and currency-api). Nothing about you is sent.": "Kalendae {v} · csak nyilvános árfolyamokat tölt le (NBP, Frankfurter és currency-api). Rólad semmi nem kerül elküldésre.",
   "Couldn’t download the rates": "Nem sikerült letölteni az árfolyamokat",
 });
+// 1.3: the redesign (one list for commitments, folded form options, three new looks)
+Object.assign(I18N.hu, {
+  "Moves": "Áthelyezések",
+  "All": "Mind",
+  "See all": "Összes megtekintése",
+  "Aurora": "Sarki fény",
+  "Ocean": "Óceán",
+  "Midnight": "Éjfél",
+  "More options": "További beállítások",
+});

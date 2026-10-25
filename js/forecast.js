@@ -1,6 +1,7 @@
 // Forecast: each account's balance for the next 60 days, with an 80% likely range,
-// in the currency you show money in.
+// in the currency you show money in; the lowest point up top, and what your next pay goes to.
 let fcSel = null; // account id, 'spend' (your spending money together) or 'all'
+let fcAll = false; // the whole "what moves the line" list, not just the first few
 
 function renderForecast() {
   const v = $('#vForecast');
@@ -19,30 +20,35 @@ function renderForecast() {
   const title = sel ? esc(sel.name) : fcSel === 'spend' ? t('Spending money') : t('Everything');
   const floor = S.settings.floor && (fcSel === 'spend' || (sel && !many && pool[0] === sel)) ? spendFloor() : null;
   const short = d => dfmt(d, { day: 'numeric', month: 'short' });
-  v.innerHTML = `<div class="chips" style="margin:8px 0 2px">${many ? `<button class="chip ${fcSel === 'spend' ? 'on' : ''}" data-f="spend">${t('Spending money')}</button>` : ''}${accts.map(a =>
+  v.innerHTML = `<div class="chips scroller" style="margin-top:6px">${many ? `<button class="chip ${fcSel === 'spend' ? 'on' : ''}" data-f="spend">${t('Spending money')}</button>` : ''}${accts.map(a =>
       `<button class="chip ${a.id === fcSel ? 'on' : ''}" data-f="${a.id}"><span class="dot" style="background:${accColor(a)}"></span>${esc(a.name)}</button>`).join('')}
       ${liveAccounts().length > 1 ? `<button class="chip ${fcSel === 'all' ? 'on' : ''}" data-f="all">${t('Everything')}</button>` : ''}</div>
-    <div class="card"><h3><span>${title} · ${t('60 days')} · ${S.settings.display}</span><em>${t('80% likely range')}</em></h3>
-      <div class="chartWrap" id="chartWrap"><svg id="chart"></svg><div class="tip" id="tip"></div></div>
-      <div class="fkeys"><span><i style="background:${sel ? accColor(sel) : 'var(--ink)'}"></i>${t('Expected')}</span><span><i class="band"></i>${t('Likely range')}</span>${floor != null ? `<span><i class="dash"></i>${t('Your floor')}</span>` : ''}<span><i class="pay"></i>${t('Payday')}</span></div>
-      <div class="stats">
+    <div class="card">
+      <div class="hero left"><div class="k">${title} · ${t('Lowest')}</div>
+        <div class="big num" style="color:${low.mid < (floor ?? 0) ? 'var(--warn)' : 'inherit'}">${fmt(low.mid)}</div><div class="sub">${low.date.toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long' })}</div></div>
+      <div class="stats" style="grid-template-columns:repeat(2,minmax(0,1fr))">
         <div class="stat"><div class="k">${t('Now')}</div><div class="v num">${fmt(f[0].mid)}</div><div class="s">${sel ? t('updated {ago}', { ago: agoText(sel.balanceAt) }) : fcSel === 'spend' ? tn(pool.length, '{n} account', '{n} accounts') : t('all accounts')}</div></div>
-        <div class="stat"><div class="k">${t('Lowest')}</div><div class="v num" style="color:${low.mid < 0 ? 'var(--warn)' : 'inherit'}">${fmt(low.mid)}</div><div class="s">${short(low.date)}</div></div>
-        <div class="stat"><div class="k">${short(end.date)}</div><div class="v num">${fmt(end.mid)}</div><div class="s">± ${fmt((end.hi - end.lo) / 2)}</div></div></div></div>
-    <div class="card"><h3>${t('What moves the line')}</h3><ul class="list" id="fcList"></ul></div>
+        <div class="stat"><div class="k">${short(end.date)}</div><div class="v num">${fmt(end.mid)}</div><div class="s">± ${fmt((end.hi - end.lo) / 2)}</div></div></div>
+      <h3 style="margin-top:18px"><span>${t('60 days')} · ${S.settings.display}</span><em>${t('80% likely range')}</em></h3>
+      <div class="chartWrap" id="chartWrap"><svg id="chart"></svg><div class="tip" id="tip"></div></div>
+      <div class="fkeys"><span><i style="background:${sel ? accColor(sel) : 'var(--ink)'}"></i>${t('Expected')}</span><span><i class="band"></i>${t('Likely range')}</span>${floor != null ? `<span><i class="dash"></i>${t('Your floor')}</span>` : ''}<span><i class="pay"></i>${t('Payday')}</span></div></div>
+    ${paydayPlanHtml()}
+    <div class="card"><h3>${t('What moves the line')}</h3><ul class="list" id="fcList"></ul><div class="more-link" id="fcMore"></div></div>
     <p class="honest">${ids.some(id => accountById(id).everyday) ? t('The range widens because everyday spending varies; weekly check-ins narrow it.') : t('Add your everyday spending to an account and the forecast takes it off day by day.')}
       ${ids.some(id => accountById(id).cur !== S.settings.display) ? ' ' + t('Money in other currencies widens it a little too.') : ''} ${t('It’s a forecast, not a bank statement.')}</p>`;
 
-  $$('[data-f]', v).forEach(b => b.onclick = () => { fcSel = b.dataset.f; tick('8'); renderForecast(); });
+  $$('[data-f]', v).forEach(b => b.onclick = () => { fcSel = b.dataset.f; fcAll = false; tick('8'); renderForecast(); });
   const big = [];
   f.forEach(p => p.ev.forEach(e => big.push({ p, e })));
   big.sort((x, y) => x.p.t - y.p.t);
   const daily = ids.reduce((s, id) => s + dailySpend(accountById(id)) * (ids.length > 1 ? myShare(accountById(id)) : 1), 0);
-  $('#fcList').innerHTML = big.slice(0, 12).map(({ p, e }) => `<li><div class="when">${dfmt(p.date, { month: 'short' })}<b>${p.date.getDate()}</b></div>
+  const shown = big.slice(0, fcAll ? 40 : 6);
+  $('#fcList').innerHTML = (daily ? `<li><div class="when">${t('daily')}</div><div><div class="nm">${t('Everyday spending')}</div><div class="meta">${t('your estimate')}</div></div><div class="amt num">${fmt(-daily)}</div></li>` : '') +
+    shown.map(({ p, e }) => `<li><div class="when">${dfmt(p.date, { month: 'short' })}<b>${p.date.getDate()}</b></div>
       <div><div class="nm">${esc(e.name)}</div><div class="meta"><span class="dot" style="background:${accColor(e.acct)}"></span>${esc(e.acct.name)}${e.it.varies ? ' · ' + t('average') : ''}</div></div>
-      <div class="amt num ${e.a > 0 ? 'pos' : ''}">${e.a > 0 ? '+' : ''}${fmt(e.a)}</div></li>`).join('') +
-    (daily ? `<li><div class="when">${t('daily')}</div><div><div class="nm">${t('Everyday spending')}</div><div class="meta">${t('your estimate')}</div></div><div class="amt num">${fmt(-daily)}</div></li>` : '') ||
+      <div class="amt num ${e.a > 0 ? 'pos' : ''}">${e.a > 0 ? '+' : ''}${fmt(e.a)}</div></li>`).join('') ||
     `<li><div></div><div class="sub">${t('Nothing planned in the next 60 days.')}</div><div></div></li>`;
+  if (big.length > shown.length) { $('#fcMore').innerHTML = `<button>${t('See all')}</button>`; $('#fcMore button').onclick = () => { fcAll = true; renderForecast(); }; }
   requestAnimationFrame(() => drawChart(f, sel, floor, ids));
 }
 

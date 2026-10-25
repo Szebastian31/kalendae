@@ -539,3 +539,13 @@ Object.assign(I18N.cs, {
   "Kalendae {v} · the only things it downloads are public exchange rates (NBP, Frankfurter and currency-api). Nothing about you is sent.": "Kalendae {v} · stahuje jen veřejné směnné kurzy (NBP, Frankfurter a currency-api). Nic o vás se neodesílá.",
   "Couldn’t download the rates": "Kurzy se nepodařilo stáhnout",
 });
+// 1.3: the redesign (one list for commitments, folded form options, three new looks)
+Object.assign(I18N.cs, {
+  "Moves": "Převody",
+  "All": "Vše",
+  "See all": "Zobrazit vše",
+  "Aurora": "Polární záře",
+  "Ocean": "Oceán",
+  "Midnight": "Půlnoc",
+  "More options": "Další možnosti",
+});

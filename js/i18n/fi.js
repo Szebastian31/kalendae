@@ -534,3 +534,13 @@ Object.assign(I18N.fi, {
   "Kalendae {v} · the only things it downloads are public exchange rates (NBP, Frankfurter and currency-api). Nothing about you is sent.": "Kalendae {v} · lataa vain julkisia valuuttakursseja (NBP, Frankfurter ja currency-api). Sinusta ei lähetetä mitään.",
   "Couldn’t download the rates": "Kursseja ei voitu ladata",
 });
+// 1.3: the redesign (one list for commitments, folded form options, three new looks)
+Object.assign(I18N.fi, {
+  "Moves": "Siirrot",
+  "All": "Kaikki",
+  "See all": "Näytä kaikki",
+  "Aurora": "Revontulet",
+  "Ocean": "Meri",
+  "Midnight": "Keskiyö",
+  "More options": "Lisää valintoja",
+});

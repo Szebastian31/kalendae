@@ -7,7 +7,9 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Insets;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.VibrationEffect;
@@ -15,6 +17,10 @@ import android.os.Vibrator;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.util.Base64;
+import android.view.View;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
+import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -23,6 +29,7 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
 
 import androidx.core.content.FileProvider;
 import androidx.webkit.WebViewAssetLoader;
@@ -37,6 +44,8 @@ import java.nio.charset.StandardCharsets;
  * Kalendae's whole interface is the web app, bundled in the APK. This activity hosts it full screen and
  * gives it what a browser can't do reliably: a daily notification about what's coming up (sent even when the app is closed), saving and
  * opening backup files, receipt photos (camera, saving to Pictures, sharing), the share sheet and vibration.
+ * The page draws edge to edge, behind the status bar and the gesture bar; it's told how tall they are (--sat / --sab)
+ * so nothing important sits under them.
  * Your money data lives in the WebView's local storage, which never leaves the phone
  * (allowBackup is off, so it isn't copied to cloud backups either; use the backup file instead).
  */
@@ -51,12 +60,13 @@ public class MainActivity extends Activity {
     private ValueCallback<Uri[]> pendingOpen;
     private File cameraFile;          // where the camera writes a receipt photo
     private static final String FILES = "com.kalendae.money.files"; // the FileProvider in AndroidManifest.xml
+    private int insetTop, insetBottom; // status bar and gesture bar, in CSS pixels
+    private boolean lightBars;         // dark clock and icons, for a light look
 
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
-        getWindow().setStatusBarColor(Color.parseColor(NIGHT));
-        getWindow().setNavigationBarColor(Color.parseColor(NIGHT));
+        edgeToEdge();
         MoneyNotifier.createChannels(this);
         MoneyNotifier.scheduleAll(this);
         clearCache("camera");
@@ -64,7 +74,31 @@ public class MainActivity extends Activity {
 
         web = new WebView(this);
         web.setBackgroundColor(Color.parseColor(NIGHT));
-        setContentView(web);
+        FrameLayout root = new FrameLayout(this);
+        root.setBackgroundColor(Color.parseColor(NIGHT));
+        root.addView(web, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        setContentView(root);
+        // the bars' heights go to the page; the keyboard shrinks the page instead, so the field you type in stays visible
+        root.setOnApplyWindowInsetsListener((v, ins) -> {
+            int top, bottom, ime;
+            if (Build.VERSION.SDK_INT >= 30) {
+                Insets bars = ins.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+                top = bars.top;
+                bottom = bars.bottom;
+                ime = ins.getInsets(WindowInsets.Type.ime()).bottom;
+            } else {
+                top = ins.getSystemWindowInsetTop();
+                bottom = ins.getStableInsetBottom();
+                int all = ins.getSystemWindowInsetBottom();
+                ime = all > bottom ? all : 0; // more than the gesture bar: the keyboard is open
+            }
+            v.setPadding(0, 0, 0, ime);
+            float d = getResources().getDisplayMetrics().density;
+            insetTop = Math.round(top / d);
+            insetBottom = ime > 0 ? 0 : Math.round(bottom / d);
+            pushInsets();
+            return ins;
+        });
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
@@ -87,6 +121,11 @@ public class MainActivity extends Activity {
                 if (HOST.equals(u.getHost())) return false;
                 try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (Exception ignored) {}
                 return true;
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                pushInsets(); // a fresh page has forgotten them
             }
         });
         // <input type="file">: a backup file to restore, or a receipt photo (camera or gallery)
@@ -125,6 +164,39 @@ public class MainActivity extends Activity {
 
         if (state != null) web.restoreState(state);
         else web.loadUrl(START);
+    }
+
+    /** Draw behind the status bar and the gesture bar, with both bars see-through. */
+    @SuppressWarnings("deprecation")
+    private void edgeToEdge() {
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
+        getWindow().setNavigationBarColor(Color.TRANSPARENT);
+        getWindow().setStatusBarContrastEnforced(false);
+        getWindow().setNavigationBarContrastEnforced(false);
+        getWindow().getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+        if (Build.VERSION.SDK_INT >= 30) getWindow().setDecorFitsSystemWindows(false);
+        applyBars();
+    }
+
+    /** Light icons on the dark looks, dark icons on Paper. */
+    @SuppressWarnings("deprecation")
+    private void applyBars() {
+        if (Build.VERSION.SDK_INT >= 30) {
+            WindowInsetsController c = getWindow().getInsetsController();
+            if (c != null) {
+                int both = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+                c.setSystemBarsAppearance(lightBars ? both : 0, both);
+            }
+        } else {
+            int f = View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
+            if (lightBars) f |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+            getWindow().getDecorView().setSystemUiVisibility(f);
+        }
+    }
+
+    private void pushInsets() {
+        if (web == null) return;
+        web.evaluateJavascript("(function(s){s.setProperty('--sat','" + insetTop + "px');s.setProperty('--sab','" + insetBottom + "px')})(document.documentElement.style)", null);
     }
 
     @Override
@@ -250,6 +322,13 @@ public class MainActivity extends Activity {
                     startActivity(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName()));
                 } catch (Exception ignored) {}
             });
+        }
+
+        /** The look changed: dark status-bar icons on a light look, light ones on a dark look. */
+        @JavascriptInterface
+        public void setBars(boolean light) {
+            if (light == lightBars) return;
+            runOnUiThread(() -> { lightBars = light; applyBars(); });
         }
 
         /** Opens the system "save as" screen for the backup file. Calls kalendaeSaved(true|false) after. */
