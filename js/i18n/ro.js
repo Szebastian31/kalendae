@@ -534,3 +534,13 @@ Object.assign(I18N.ro, {
   "Kalendae {v} · the only things it downloads are public exchange rates (NBP, Frankfurter and currency-api). Nothing about you is sent.": "Kalendae {v} · descarcă doar cursuri de schimb publice (NBP, Frankfurter și currency-api). Nu se trimite nimic despre tine.",
   "Couldn’t download the rates": "Cursurile nu au putut fi descărcate",
 });
+// 1.3: the redesign (one list for commitments, folded form options, three new looks)
+Object.assign(I18N.ro, {
+  "Moves": "Mutări",
+  "All": "Toate",
+  "See all": "Vezi tot",
+  "Aurora": "Auroră",
+  "Ocean": "Ocean",
+  "Midnight": "Miezul nopții",
+  "More options": "Mai multe opțiuni",
+});

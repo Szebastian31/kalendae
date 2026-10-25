@@ -10,8 +10,8 @@ android {
         applicationId "com.kalendae.money"
         minSdk 29
         targetSdk 34
-        versionCode 9
-        versionName "1.2.0"
+        versionCode 10
+        versionName "1.3.0"
     }
 
     // One fixed key (android/debug.keystore, a copy of Fidelis's fidelis-debug.keystore), so every

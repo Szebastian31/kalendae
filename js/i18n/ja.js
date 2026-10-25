@@ -539,3 +539,13 @@ Object.assign(I18N.ja, {
   "Kalendae {v} · the only things it downloads are public exchange rates (NBP, Frankfurter and currency-api). Nothing about you is sent.": "Kalendae {v} · ダウンロードするのは公開の為替レート（NBP、Frankfurter、currency-api）だけです。あなたに関する情報は送信されません。",
   "Couldn’t download the rates": "レートをダウンロードできませんでした",
 });
+// 1.3: the redesign (one list for commitments, folded form options, three new looks)
+Object.assign(I18N.ja, {
+  "Moves": "移動",
+  "All": "すべて",
+  "See all": "すべて表示",
+  "Aurora": "オーロラ",
+  "Ocean": "オーシャン",
+  "Midnight": "ミッドナイト",
+  "More options": "その他のオプション",
+});

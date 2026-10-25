@@ -534,3 +534,13 @@ Object.assign(I18N.bg, {
   "Kalendae {v} · the only things it downloads are public exchange rates (NBP, Frankfurter and currency-api). Nothing about you is sent.": "Kalendae {v} · изтегля само публични валутни курсове (NBP, Frankfurter и currency-api). Нищо за вас не се изпраща.",
   "Couldn’t download the rates": "Курсовете не можаха да се изтеглят",
 });
+// 1.3: the redesign (one list for commitments, folded form options, three new looks)
+Object.assign(I18N.bg, {
+  "Moves": "Прехвърляния",
+  "All": "Всички",
+  "See all": "Виж всички",
+  "Aurora": "Сияние",
+  "Ocean": "Океан",
+  "Midnight": "Полунощ",
+  "More options": "Още опции",
+});

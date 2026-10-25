@@ -2,15 +2,23 @@
 const LOOKS = {
   night: [t('Night'), 'linear-gradient(#070d26,#2b3d7e)', '#eef3ff'],
   dawn: [t('Dawn'), 'linear-gradient(#2a1b6a,#77479a 60%,#e0828e)', '#f4f0ff'],
+  aurora: [t('Aurora'), 'radial-gradient(90% 70% at 20% 10%,rgba(70,240,170,.55),transparent 70%),linear-gradient(#03141a,#0f5552)', '#eafff6'],
+  ocean: [t('Ocean'), 'radial-gradient(90% 70% at 80% 20%,rgba(90,210,255,.5),transparent 70%),linear-gradient(#021222,#0b6a8e)', '#ecf8ff'],
+  midnight: [t('Midnight'), 'radial-gradient(90% 70% at 30% 20%,rgba(130,110,255,.35),transparent 70%),#000', '#f1f1f6'],
   paper: [t('Paper'), 'linear-gradient(#f7f1e6,#ecdcca)', '#22182e'],
 };
+const LIGHT_LOOKS = ['paper'];
 
 function applyLook() {
+  if (!LOOKS[S.settings.look]) S.settings.look = 'night';
   document.documentElement.dataset.look = S.settings.look;
   const top = getComputedStyle(document.documentElement).getPropertyValue('--sky-top').trim();
   $('meta[name=theme-color]').setAttribute('content', top);
+  // dark clock and icons in the status bar on a light look (the Android app draws behind it)
+  if (NATIVE && NATIVE.setBars) NATIVE.setBars(LIGHT_LOOKS.includes(S.settings.look));
 }
 
+let setMore = false; // the folded part of Settings stays open while you change things in it
 function settingsSheet() {
   const st = S.settings;
   const locked = currenciesInUse();
@@ -26,19 +34,13 @@ function settingsSheet() {
     <div class="field"><label>${t('Show budgets in')}</label><div class="chips" id="sDisp">${st.currencies.map(c =>
       `<button class="chip ${c === st.display ? 'on' : ''}" data-c="${c}">${c}</button>`).join('')}</div></div>
 
-    <div class="field"><label>${t('Currencies you use')}</label>
-      <div class="chips" id="sCurs">${Object.keys(CURRENCIES).map(c =>
-        `<button class="chip ${st.currencies.includes(c) ? 'on' : ''} ${locked.includes(c) ? 'lock' : ''}" data-c="${c}" title="${esc(curName(c))}">${c}</button>`).join('')}</div>
-      <p class="sub" style="margin-top:8px">${t('A dot means an account uses it, so it stays on.')} ${esc(ratesNote())}</p>
-      <button class="btn ghost" style="margin-top:8px;padding:8px 12px;font-size:13px" id="sRates">${t('Update rates now')}</button></div>
-
-    <div class="card" style="padding:12px 16px">
+    <div class="card" style="padding:4px 16px;margin-top:16px">
       <div class="tog"><div>${t('Daily notification')}<small>${NATIVE ? t('Renewals, bills and trial endings, a few days ahead') : t('Only in the Android app')}</small></div>
         <button class="sw-t ${st.notifOn ? 'on' : ''}" id="sNotif" ${NATIVE ? '' : 'disabled'}></button></div>
       <div class="tog"><div>${t('Around')}<small>${t('Android sends it within a few minutes of this')}</small></div>
         <input class="input num" id="sTime" type="time" value="${st.notifTime}" style="width:118px;padding:8px 10px" ${NATIVE ? '' : 'disabled'}></div>
       ${NATIVE ? `<div class="tog"><div>${t('Notifications on this phone')}<small>${allowed ? t('Allowed') : t('Not allowed yet')}</small></div>
-        <button class="btn ghost" style="padding:8px 12px;font-size:13px" id="sPerm">${allowed ? t('Settings') : t('Allow')}</button></div>` : ''}
+        <button class="btn ghost small" id="sPerm">${allowed ? t('Settings') : t('Allow')}</button></div>` : ''}
       <div class="tog"><div>${t('Weekly check-in')}<small>${t('A reminder to type your balances')}</small></div>
         <select class="input" id="sCheck" style="width:138px;padding:8px 10px">${['off'].concat(WEEKDAYS.map((_, i) => i)).map(v =>
           `<option value="${v}" ${(v === 'off' ? st.checkinDay == null : +v === st.checkinDay) ? 'selected' : ''}>${v === 'off' ? t('Off') : WEEKDAYS[v]}</option>`).join('')}</select></div>
@@ -48,14 +50,21 @@ function settingsSheet() {
       <p class="sub">${t('Kalendae has no account, so this file is how you move to a new phone. Keep it somewhere safe, like your cloud drive.')}</p>
       <div class="row2"><button class="btn" id="sExport">${t('Save a backup')}</button><button class="btn ghost" id="sImport">${t('Restore')}</button></div></div>
 
+    ${moreBox('settings', `<div class="field"><label>${t('Currencies you use')}</label>
+      <div class="chips" id="sCurs">${Object.keys(CURRENCIES).map(c =>
+        `<button class="chip ${st.currencies.includes(c) ? 'on' : ''} ${locked.includes(c) ? 'lock' : ''}" data-c="${c}" title="${esc(curName(c))}">${c}</button>`).join('')}</div>
+      <p class="sub" style="margin-top:8px">${t('A dot means an account uses it, so it stays on.')} ${esc(ratesNote())}</p>
+      <button class="btn ghost small" style="margin-top:8px" id="sRates">${t('Update rates now')}</button></div>
+
     <div class="field"><label>${t('Try it out')}</label>
       <p class="sub">${t('Fills Kalendae with a made-up month (accounts in three currencies, bills, subscriptions and a trial) so you can see every screen. Your own data is replaced, so save a backup first.')}</p>
       <button class="btn ghost wide" style="margin-top:8px" id="sDemo">${t('Load sample data')}</button></div>
 
-    <div class="field"><label>${t('Start over')}</label><button class="btn danger wide" id="sWipe">${t('Delete everything on this phone')}</button></div>
+    <div class="field"><label>${t('Start over')}</label><button class="btn danger wide" id="sWipe">${t('Delete everything on this phone')}</button></div>`, setMore)}
     <p class="honest">${t('Kalendae {v} · the only things it downloads are public exchange rates (NBP, Frankfurter and currency-api). Nothing about you is sent.', { v: NATIVE ? NATIVE.version() : 'web' })}</p>`;
 
   openSheet(html, body => {
+    $('[data-more="settings"]', body).addEventListener('toggle', e => { setMore = e.target.open; });
     $('#sLang', body).onchange = e => setLanguage(e.target.value);
     $$('#sLook button', body).forEach(b => b.onclick = () => { st.look = b.dataset.k; save(); settingsSheet(); });
     $$('#sDisp button', body).forEach(b => b.onclick = () => { st.display = b.dataset.c; save(); settingsSheet(); });

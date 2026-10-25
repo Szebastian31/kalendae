@@ -534,3 +534,13 @@ Object.assign(I18N.fa, {
   "Kalendae {v} · the only things it downloads are public exchange rates (NBP, Frankfurter and currency-api). Nothing about you is sent.": "Kalendae {v} · فقط نرخ‌های عمومی ارز را دانلود می‌کند (NBP، Frankfurter و currency-api). هیچ چیزی دربارهٔ شما ارسال نمی‌شود.",
   "Couldn’t download the rates": "دانلود نرخ‌ها ممکن نشد",
 });
+// 1.3: the redesign (one list for commitments, folded form options, three new looks)
+Object.assign(I18N.fa, {
+  "Moves": "انتقال‌ها",
+  "All": "همه",
+  "See all": "دیدن همه",
+  "Aurora": "شفق",
+  "Ocean": "اقیانوس",
+  "Midnight": "نیمه‌شب",
+  "More options": "گزینه‌های بیشتر",
+});

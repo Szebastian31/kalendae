@@ -534,3 +534,13 @@ Object.assign(I18N.tr, {
   "Kalendae {v} · the only things it downloads are public exchange rates (NBP, Frankfurter and currency-api). Nothing about you is sent.": "Kalendae {v} · yalnızca herkese açık döviz kurlarını indirir (NBP, Frankfurter ve currency-api). Seninle ilgili hiçbir şey gönderilmez.",
   "Couldn’t download the rates": "Kurlar indirilemedi",
 });
+// 1.3: the redesign (one list for commitments, folded form options, three new looks)
+Object.assign(I18N.tr, {
+  "Moves": "Aktarımlar",
+  "All": "Tümü",
+  "See all": "Tümünü gör",
+  "Aurora": "Kutup ışığı",
+  "Ocean": "Okyanus",
+  "Midnight": "Gece yarısı",
+  "More options": "Diğer seçenekler",
+});

@@ -1,5 +1,5 @@
-// Today: the month's orbit, what's safe to spend until payday, warnings, how sure the number is,
-// the payday plan, and what's next.
+// Today: the month's orbit with what's safe to spend until payday, anything that needs you,
+// spending so far and what's next. (The payday plan lives on the Forecast tab.)
 const NS = 'http://www.w3.org/2000/svg';
 const el = (tag, attrs = {}, parent) => {
   const e = document.createElementNS(NS, tag);
@@ -127,71 +127,48 @@ function renderToday() {
   const safe = safeToSpend();
   const items = liveItems();
   const short = d => dfmt(d, { day: 'numeric', month: 'short' });
-  let html = `<div class="orbitWrap"><svg id="orbit" viewBox="0 0 340 340" preserveAspectRatio="xMidYMid meet"></svg><div class="orbitCenter" id="orbitCenter"></div></div>
-    <div class="legend"><span><span class="dot" style="background:var(--gold)"></span>${t('Money in & moves')}</span><span>${t('Middle: monthly')}</span><span>${t('Outer: other & trials')}</span></div>`;
+  const sure = safe ? sureness(safe) : null;
+  // the orbit, with "safe to spend" in the middle and how sure it is just below
+  let html = `<div class="card" style="padding:10px 12px 16px"><div class="orbitWrap"><svg id="orbit" viewBox="0 0 340 340" preserveAspectRatio="xMidYMid meet"></svg><div class="orbitCenter" id="orbitCenter"></div></div>
+    ${sure ? `<div class="sureRow"><button class="chip" id="tSure">${ringSvg(sure.sig.map(s => s[0]), 20)}${sure.label}${CHEV}</button></div>` : ''}
+    <div class="legend"><span><span class="dot" style="background:var(--gold)"></span>${t('Money in & moves')}</span><span>${t('Middle: monthly')}</span><span>${t('Outer: other & trials')}</span></div></div>`;
+
+  // everything that needs you, one row each: a check-in, an account running short, a trial about to turn paid
+  const alerts = [];
+  const due = checkinDue();
+  if (due.length) alerts.push(alertRow('data-al="check"', '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>', 'var(--a1)',
+    t('Time for a check-in'), due.length === 1 ? t('{a} was last updated {ago}.', { a: esc(due[0].name), ago: agoText(due[0].balanceAt) }) : t('{n} balances are a week old or more.', { n: due.length })));
+  const ws = warnings().slice(0, 2);
+  ws.forEach((w, i) => {
+    const a = w.acct, name = esc(w.label || a.name);
+    alerts.push(alertRow(`data-fix="${i}"`, '<path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17.5v.5"/>', 'var(--warn)', t('{a} runs short around {d}', { a: name, d: short(w.first.date) }),
+      (w.payT && w.payT > w.first.t ? t('Lowest point {v} on {d}, before money next arrives.', { v: fmt(w.low.mid), d: short(w.low.date) }) : t('Lowest point {v} on {d}.', { v: fmt(w.low.mid), d: short(w.low.date) }))
+      + (!w.pool && a.shared && a.partner ? ' ' + t('Worth telling {name}.', { name: esc(a.partner) }) : '')));
+  });
+  items.filter(it => isTrialNow(it) && nextIn(it) != null && nextIn(it) <= 3).forEach(it =>
+    alerts.push(alertRow('data-al="trial"', KINDS.sub.icon, 'var(--a4)', `${esc(it.name)} · ${t('trial ends')}`, inDaysText(nextIn(it)))));
+  if (alerts.length) html += `<div class="card alerts">${alerts.join('')}</div>`;
 
   if (!items.length) html += `<div class="card"><h3>${t('Next: what comes and goes')}</h3><p class="sub">${t('Add your salary, bills and subscriptions so the orbit fills up and “safe to spend” knows what’s coming.')}</p>
     <button class="btn wide" style="margin-top:12px" id="tAdd">${t('Add income or a bill')}</button></div>`;
 
-  const due = checkinDue();
-  if (due.length) html += `<div class="card ciCard"><div class="wt">${svg('<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>')}
-    <div><b>${t('Time for a check-in')}</b><br>${due.length === 1 ? t('{a} was last updated {ago}.', { a: esc(due[0].name), ago: agoText(due[0].balanceAt) }) : t('{n} balances are a week old or more.', { n: due.length })} ${t('Type what’s in them now and Kalendae learns your everyday spending.')}</div></div>
-    <div class="row2"><button class="btn" id="tCheck">${t('Check in')}</button></div></div>`;
-
-  const ws = warnings().slice(0, 2);
-  ws.forEach((w, i) => {
-    const a = w.acct, name = esc(w.label || a.name);
-    html += `<div class="card warn"><div class="wt">${svg('<path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17.5v.5"/>')}
-      <div><b>${t('{a} runs short around {d}', { a: name, d: short(w.first.date) })}</b><br>
-      ${w.payT && w.payT > w.first.t ? t('Lowest point {v} on {d}, before money next arrives.', { v: fmt(w.low.mid), d: short(w.low.date) }) : t('Lowest point {v} on {d}.', { v: fmt(w.low.mid), d: short(w.low.date) })}${!w.pool && a.shared && a.partner ? ' ' + t('Worth telling {name}.', { name: esc(a.partner) }) : ''}</div></div>
-      <div class="row2"><button class="btn ghost" data-fix="${i}">${t('Plan a top-up')}</button></div></div>`;
-  });
-
   html += spendCardHtml();
 
-  if (safe) {
-    const pool = safe.accts;
-    const nonIncome = items.filter(it => it.kind !== 'income').length;
-    const fresh = a => a.balanceAt && daysBetween(fromISO(a.balanceAt), day0()) <= 7;
-    const stale = pool.filter(a => !fresh(a));
-    const oldest = pool.slice().sort((x, y) => (x.balanceAt || '').localeCompare(y.balanceAt || ''))[0];
-    const sig = [
-      [!safe.noIncome, safe.noIncome ? t('No income dated in {a}', { a: poolNames(pool) }) : t('Income is dated')],
-      [nonIncome > 0, nonIncome ? tn(nonIncome, '{n} commitment has a date', '{n} commitments have dates') : t('No bills or subscriptions yet')],
-      [!stale.length, stale.length > 1 ? t('{n} balances are a week old or more.', { n: stale.length }) : t('Balance updated {ago}', { ago: agoText((stale[0] || oldest).balanceAt) })],
-      [pool.some(a => a.everyday), pool.some(a => a.everyday) ? t('Everyday spending is set') : t('Everyday spending not set')],
-    ];
-    const agree = sig.filter(s => s[0]).length;
-    const sure = [t('Rough guess'), t('Rough guess'), t('Fairly sure'), t('Fairly sure'), t('Sure')][agree];
-    const floorTxt = S.settings.floor ? fmt(S.settings.floor, S.settings.floorCur || S.settings.display) : '';
-    html += `<div class="card" id="safeCard"><h3>${t('How sure is “safe to spend”?')} <em>${sure}</em></h3>
-      <div class="agree">${ringSvg(sig.map(s => s[0]))}<ul>${sig.map(s => `<li class="${s[0] ? 'y' : 'n'}"><i>${s[0] ? '✓' : '~'}</i>${s[1]}</li>`).join('')}</ul></div>
-      <p class="sub" style="margin-top:10px">${safe.daily && safe.fun > 0 ? t('At your usual everyday spending you’d still have {v} spare for fun.', { v: `<b class="num">${fmt(safe.fun)}</b>` }) : ''}
-      ${floorTxt ? t('Counted from {a}, keeping {v} untouched.', { a: poolNames(pool, true), v: floorTxt }) : t('Counted from {a}.', { a: poolNames(pool, true) })} <a href="#" id="safeSet" class="link">${t('Change')}</a></p></div>`;
-  }
-
-  const plan = paydayPlan();
-  if (plan && plan.income > 0) {
-    const total = plan.rows.reduce((s, r) => s + r.v, 0) + Math.max(0, plan.left);
-    html += `<div class="card"><h3>${t('Payday plan · {d}', { d: short(dateIn(plan.day)) })} <em class="num">${fmt(plan.income)}</em></h3>
-      <div class="planbar">${plan.rows.map(r => `<div style="flex:${r.v / total};background:${r.c}"></div>`).join('')}${plan.left > 0 ? `<div style="flex:${plan.left / total};background:var(--gold)"></div>` : ''}</div>
-      <div class="planlist">${plan.rows.map(r => `<div class="l"><span class="dot" style="background:${r.c}"></span><span>${esc(r.k)}${r.s ? `<small>${r.s}</small>` : ''}</span></div><div class="num">${fmt(r.v)}</div>`).join('')}
-        <div class="l"><span class="dot" style="background:var(--gold)"></span><span><b>${plan.left >= 0 ? t('Free') : t('Short')}</b><small>${plan.left >= 0 ? t('yours to spend, save or invest') : t('more is planned than comes in')}</small></span></div><div class="num" style="color:${plan.left < 0 ? 'var(--warn)' : 'inherit'}"><b>${fmt(plan.left)}</b></div></div></div>`;
-  }
-
-  const next = upcoming(14).slice(0, 7);
-  if (next.length) html += `<div class="card"><h3>${t('Next up')} <em>${t('every account')}</em></h3><ul class="list">${next.map(({ k, it }) => {
+  const next = upcoming(14);
+  if (next.length) html += `<div class="card"><h3>${t('Next up')} <em>${t('every account')}</em></h3><ul class="list">${next.slice(0, 4).map(({ k, it }) => {
     const d = dateIn(k), a = accountById(it.acct), sign = KINDS[it.kind].sign, b = fmtBoth(it.amount * sign, itemCur(it));
     return `<li class="it" data-id="${it.id}"><div class="when">${dfmt(d, { month: 'short' })}<b>${d.getDate()}</b></div>
       <div><div class="nm">${esc(it.name)}${isTrialNow(it) && k === nextIn(it) ? ' · ' + t('trial ends') : ''}</div><div class="meta"><span class="dot" style="background:${accColor(a)}"></span>${esc(a.name)} · ${inDaysText(k)}</div></div>
       <div class="amt num ${sign > 0 ? 'pos' : ''}">${sign > 0 ? '+' : ''}${b.main}${b.approx ? `<small>${b.approx}</small>` : ''}</div></li>`;
-  }).join('')}</ul></div>`;
+  }).join('')}</ul>${next.length > 4 ? `<div class="more-link"><button id="tAll">${t('See all')}</button></div>` : ''}</div>`;
 
   v.innerHTML = html;
   drawOrbit($('#orbit'), $('#orbitCenter'), safe);
   const add = $('#tAdd'); if (add) add.onclick = () => itemSheet(null, 'income');
-  const chk = $('#tCheck'); if (chk) chk.onclick = () => checkinSheet();
-  const ss = $('#safeSet'); if (ss) ss.onclick = e => { e.preventDefault(); safeSettingsSheet(); };
+  const sb = $('#tSure'); if (sb) sb.onclick = () => sureSheet(safe, sure);
+  const all = $('#tAll'); if (all) all.onclick = () => showTab('commit');
+  $$('[data-al="check"]', v).forEach(r => r.onclick = () => checkinSheet());
+  $$('[data-al="trial"]', v).forEach(r => r.onclick = () => showTab('commit'));
   $$('.it[data-id]', v).forEach(r => r.onclick = () => itemSheet(S.items.find(x => x.id === r.dataset.id)));
   mountSpendButtons(v);
   $$('[data-fix]', v).forEach(b => b.onclick = () => {
@@ -204,6 +181,46 @@ function renderToday() {
     itemSheet(null, 'move', { id: uid(), kind: 'move', name: t('Top up {a}', { a: a.name }), amount: need, acct: from.id, to: a.id, cur: from.cur,
       start: isoDay(addDays(w.first.date, -1)), repeat: 'once', trial: false, varies: false, paused: false }, t('Plan a top-up'));
   });
+}
+
+// how sure "safe to spend" is: four checks that agree or don't
+function sureness(safe) {
+  const pool = safe.accts;
+  const nonIncome = liveItems().filter(it => it.kind !== 'income').length;
+  const fresh = a => a.balanceAt && daysBetween(fromISO(a.balanceAt), day0()) <= 7;
+  const stale = pool.filter(a => !fresh(a));
+  const oldest = pool.slice().sort((x, y) => (x.balanceAt || '').localeCompare(y.balanceAt || ''))[0];
+  const sig = [
+    [!safe.noIncome, safe.noIncome ? t('No income dated in {a}', { a: poolNames(pool) }) : t('Income is dated')],
+    [nonIncome > 0, nonIncome ? tn(nonIncome, '{n} commitment has a date', '{n} commitments have dates') : t('No bills or subscriptions yet')],
+    [!stale.length, stale.length > 1 ? t('{n} balances are a week old or more.', { n: stale.length }) : t('Balance updated {ago}', { ago: agoText((stale[0] || oldest).balanceAt) })],
+    [pool.some(a => a.everyday), pool.some(a => a.everyday) ? t('Everyday spending is set') : t('Everyday spending not set')],
+  ];
+  const agree = sig.filter(s => s[0]).length;
+  return { sig, label: [t('Rough guess'), t('Rough guess'), t('Fairly sure'), t('Fairly sure'), t('Sure')][agree] };
+}
+function sureSheet(safe, sure) {
+  const pool = safe.accts;
+  const floorTxt = S.settings.floor ? fmt(S.settings.floor, S.settings.floorCur || S.settings.display) : '';
+  openSheet(`<h2>${t('How sure is “safe to spend”?')}</h2><p class="lead">${sure.label}</p>
+    <div class="agree">${ringSvg(sure.sig.map(s => s[0]))}<ul>${sure.sig.map(s => `<li class="${s[0] ? 'y' : 'n'}"><i>${s[0] ? '✓' : '~'}</i>${s[1]}</li>`).join('')}</ul></div>
+    <p class="sub" style="margin-top:14px">${safe.daily && safe.fun > 0 ? t('At your usual everyday spending you’d still have {v} spare for fun.', { v: `<b class="num">${fmt(safe.fun)}</b>` }) : ''}
+      ${floorTxt ? t('Counted from {a}, keeping {v} untouched.', { a: poolNames(pool, true), v: floorTxt }) : t('Counted from {a}.', { a: poolNames(pool, true) })}</p>
+    <div class="row2"><button class="btn ghost" id="suC">${t('Change')}</button></div>`, body => {
+    $('#suC', body).onclick = () => safeSettingsSheet();
+  });
+}
+
+// what your next pay goes to: shown on the Forecast tab
+function paydayPlanHtml() {
+  const plan = paydayPlan();
+  if (!plan || !(plan.income > 0)) return '';
+  const short = d => dfmt(d, { day: 'numeric', month: 'short' });
+  const total = plan.rows.reduce((s, r) => s + r.v, 0) + Math.max(0, plan.left);
+  return `<div class="card"><h3>${t('Payday plan · {d}', { d: short(dateIn(plan.day)) })} <em class="num">${fmt(plan.income)}</em></h3>
+    <div class="planbar">${plan.rows.map(r => `<div style="flex:${r.v / total};background:${r.c}"></div>`).join('')}${plan.left > 0 ? `<div style="flex:${plan.left / total};background:var(--gold)"></div>` : ''}</div>
+    <div class="planlist">${plan.rows.map(r => `<div class="l"><span class="dot" style="background:${r.c}"></span><span>${esc(r.k)}${r.s ? `<small>${r.s}</small>` : ''}</span></div><div class="num">${fmt(r.v)}</div>`).join('')}
+      <div class="l"><span class="dot" style="background:var(--gold)"></span><span><b>${plan.left >= 0 ? t('Free') : t('Short')}</b><small>${plan.left >= 0 ? t('yours to spend, save or invest') : t('more is planned than comes in')}</small></span></div><div class="num" style="color:${plan.left < 0 ? 'var(--warn)' : 'inherit'}"><b>${fmt(plan.left)}</b></div></div></div>`;
 }
 
 // which accounts count as spending money, and the cushion it never touches

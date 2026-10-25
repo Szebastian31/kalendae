@@ -534,3 +534,13 @@ Object.assign(I18N.ko, {
   "Kalendae {v} · the only things it downloads are public exchange rates (NBP, Frankfurter and currency-api). Nothing about you is sent.": "Kalendae {v} · 공개 환율(NBP, Frankfurter, currency-api)만 다운로드합니다. 사용자에 관한 정보는 전송되지 않습니다.",
   "Couldn’t download the rates": "환율을 다운로드하지 못했어요",
 });
+// 1.3: the redesign (one list for commitments, folded form options, three new looks)
+Object.assign(I18N.ko, {
+  "Moves": "이동",
+  "All": "전체",
+  "See all": "모두 보기",
+  "Aurora": "오로라",
+  "Ocean": "오션",
+  "Midnight": "미드나잇",
+  "More options": "추가 옵션",
+});

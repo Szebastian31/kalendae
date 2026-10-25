@@ -19,6 +19,18 @@ function toast(text) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
 }
 
+const CHEV = '<svg class="sv chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>';
+
+// one compact "needs you" row: an icon, a line or two, and a chevron (Today and Commitments)
+const alertRow = (attrs, icon, color, title, small) => `<div class="alert" ${attrs} style="--c:${color}"><span class="ic">${svg(icon)}</span>
+  <div class="tx">${title}${small ? `<small>${small}</small>` : ''}</div>${CHEV}</div>`;
+
+// "More options": the rarely needed part of a form, folded away. It stays open or shut while the form redraws
+// or moves to a related sheet, until the sheet is closed.
+let MORE = {};
+const moreBox = (key, inner, open) => `<details class="more" data-more="${key}" ${(MORE[key] ?? open) ? 'open' : ''}><summary>${t('More options')}</summary>${inner}</details>`;
+document.addEventListener('toggle', e => { const d = e.target; if (d.dataset && d.dataset.more) MORE[d.dataset.more] = d.open; }, true);
+
 // ---- bottom sheet (one at a time; a second one replaces the first) ----
 let sheetClose = null;
 function openSheet(html, mount, onClose) {
@@ -35,6 +47,7 @@ function closeSheet() {
   if (!$('#sheet').classList.contains('show')) return false;
   $('#sheet').classList.remove('show');
   $('#scrim').classList.remove('show');
+  MORE = {};
   const fn = sheetClose; sheetClose = null;
   if (fn) fn();
   return true;

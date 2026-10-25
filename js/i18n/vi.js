@@ -534,3 +534,13 @@ Object.assign(I18N.vi, {
   "Kalendae {v} · the only things it downloads are public exchange rates (NBP, Frankfurter and currency-api). Nothing about you is sent.": "Kalendae {v} · chỉ tải tỷ giá công khai (NBP, Frankfurter và currency-api). Không gửi bất cứ thông tin nào về bạn.",
   "Couldn’t download the rates": "Không tải được tỷ giá",
 });
+// 1.3: the redesign (one list for commitments, folded form options, three new looks)
+Object.assign(I18N.vi, {
+  "Moves": "Chuyển tiền",
+  "All": "Tất cả",
+  "See all": "Xem tất cả",
+  "Aurora": "Cực quang",
+  "Ocean": "Đại dương",
+  "Midnight": "Nửa đêm",
+  "More options": "Thêm tùy chọn",
+});

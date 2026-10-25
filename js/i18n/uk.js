@@ -539,3 +539,13 @@ Object.assign(I18N.uk, {
   "Kalendae {v} · the only things it downloads are public exchange rates (NBP, Frankfurter and currency-api). Nothing about you is sent.": "Kalendae {v} · завантажує лише публічні курси валют (NBP, Frankfurter і currency-api). Нічого про вас не надсилається.",
   "Couldn’t download the rates": "Не вдалося завантажити курси",
 });
+// 1.3: the redesign (one list for commitments, folded form options, three new looks)
+Object.assign(I18N.uk, {
+  "Moves": "Перекази",
+  "All": "Усі",
+  "See all": "Показати всі",
+  "Aurora": "Полярне сяйво",
+  "Ocean": "Океан",
+  "Midnight": "Північ",
+  "More options": "Більше параметрів",
+});

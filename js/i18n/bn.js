@@ -534,3 +534,13 @@ Object.assign(I18N.bn, {
   "Kalendae {v} · the only things it downloads are public exchange rates (NBP, Frankfurter and currency-api). Nothing about you is sent.": "Kalendae {v} · শুধু সর্বজনীন বিনিময় হার ডাউনলোড করে (NBP, Frankfurter ও currency-api)। আপনার সম্পর্কে কিছুই পাঠানো হয় না।",
   "Couldn’t download the rates": "হার ডাউনলোড করা যায়নি",
 });
+// 1.3: the redesign (one list for commitments, folded form options, three new looks)
+Object.assign(I18N.bn, {
+  "Moves": "স্থানান্তর",
+  "All": "সব",
+  "See all": "সব দেখুন",
+  "Aurora": "অরোরা",
+  "Ocean": "সমুদ্র",
+  "Midnight": "মধ্যরাত",
+  "More options": "আরও বিকল্প",
+});
