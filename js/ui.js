@@ -41,6 +41,41 @@ function closeSheet() {
 }
 $('#scrim').onclick = closeSheet;
 
+// Swipe a sheet down to close it: from the handle at the top, or from anywhere once it's scrolled to the top.
+// It follows your finger and springs back if you let go early.
+(() => {
+  const sh = $('#sheet');
+  let y0 = null, dy = 0, t0 = 0, grab = false;
+  sh.addEventListener('touchstart', e => {
+    y0 = null;
+    if (e.touches.length !== 1) return;
+    grab = !!e.target.closest('.grab');
+    if (!grab && (sh.scrollTop > 0 || e.target.closest('input,select,textarea,svg.bars,.chartWrap'))) return;
+    y0 = e.touches[0].clientY; dy = 0; t0 = Date.now();
+  }, { passive: true });
+  sh.addEventListener('touchmove', e => {
+    if (y0 == null) return;
+    dy = e.touches[0].clientY - y0;
+    if (dy <= 0) { // moving up: an ordinary scroll
+      if (!grab) { y0 = null; sh.style.transform = ''; sh.style.transition = ''; }
+      return;
+    }
+    if (e.cancelable) e.preventDefault();
+    sh.style.transition = 'none';
+    sh.style.transform = `translateY(${dy}px)`;
+  }, { passive: false });
+  const end = () => {
+    if (y0 == null) return;
+    y0 = null;
+    sh.style.transition = '';
+    sh.style.transform = '';
+    if (dy > 110 || (dy > 40 && Date.now() - t0 < 250)) { tick('8'); closeSheet(); }
+    dy = 0;
+  };
+  sh.addEventListener('touchend', end);
+  sh.addEventListener('touchcancel', end);
+})();
+
 // Android back button: close a sheet first, then go back to Today, then leave the app.
 window.kalendaeBack = () => {
   const viewer = document.querySelector(".viewer"); if (viewer) { viewer.remove(); return true; }

@@ -19,6 +19,9 @@ const GROUP_ORDER = [t('Banks'), t('Wallets & e-money'), t('Cash'), t('Savings &
 const ACCOUNT_COLORS = 12; // --a1 … --a12 in each look
 // money you spend day to day; savings, investments and cards stay out of "safe to spend" unless you tick them
 const SPEND_TYPES = ['bank', 'wallet', 'emoney', 'cash', 'other'];
+// money put aside for later: its value can go up and down (interest, round-ups, the market), and that isn't spending
+const GROWTH_TYPES = ['savings', 'invest'];
+const isGrowth = a => GROWTH_TYPES.includes(a.type);
 
 function freshState() {
   return {
@@ -36,9 +39,11 @@ function freshState() {
       checkinDay: 0,    // weekly check-in reminder: 0 = Sunday … 6 = Saturday, null = off
     },
     accounts: [],   // a.spend: true/false counts it in "safe to spend" or not; unset = by type (SPEND_TYPES)
+                    // a.roundup (savings, investments): { from, mode: 'round' | 'percent', step, times, pct }
     items: [],      // income, bills, subscriptions, moves
     checkins: [],   // weekly balance check-ins
     spends: [],     // purchases logged as you make them (receipt photos live in IndexedDB)
+    transfers: [],  // money moved between your accounts right away: { id, d, from, to, amt (in from's currency) }
   };
 }
 
@@ -60,12 +65,15 @@ function migrate(s) {
   s.items = Array.isArray(s.items) ? s.items : [];
   s.checkins = Array.isArray(s.checkins) ? s.checkins : [];
   s.spends = Array.isArray(s.spends) ? s.spends : [];
+  s.transfers = Array.isArray(s.transfers) ? s.transfers : [];
   s.accounts.forEach((a, i) => {
     if (!a.id) a.id = uid();
     if (!ACCOUNT_TYPES[a.type]) a.type = 'other';
     if (typeof a.balance !== 'number') a.balance = parseFloat(a.balance) || 0;
     if (a.color == null) a.color = i % ACCOUNT_COLORS;
     if (a.shared && !a.split) a.split = { mode: 'equal', mine: 50 };
+    // savings and investments have no everyday spending (before 1.2 a check-in could learn some from a change in value)
+    if (isGrowth(a) && !a.spend) { delete a.everyday; delete a.spendHist; }
   });
   if (!s.settings.currencies.includes(s.settings.display)) s.settings.currencies.unshift(s.settings.display);
   // before 1.0.2 the floor was kept in the one spending account, in its currency
@@ -110,9 +118,21 @@ function removeAccount(id) {
   S.items = S.items.filter(it => it.acct !== id && it.to !== id);
   S.spends.filter(sp => sp.acct === id && sp.receipt).forEach(sp => delReceipt(sp.id));
   S.spends = S.spends.filter(sp => sp.acct !== id);
+  S.transfers = S.transfers.filter(x => x.from !== id && x.to !== id);
+  S.accounts.forEach(x => { if (x.roundup && x.roundup.from === id) delete x.roundup; });
   save();
 }
 function currenciesInUse() { return [...new Set(liveAccounts().map(a => a.cur))]; }
+
+// moves money between two of your accounts straight away (both balances change now, like a logged spend)
+function transferNow(from, to, amt) {
+  const into = conv(amt, from.cur, to.cur);
+  from.balance = Math.round((from.balance + (from.type === 'card' ? amt : -amt)) * 100) / 100; // a card stores what you owe
+  to.balance = Math.round((to.balance + (to.type === 'card' ? -into : into)) * 100) / 100;
+  S.transfers.push({ id: uid(), d: todayISO(), from: from.id, to: to.id, amt });
+  S.transfers = S.transfers.slice(-300);
+  save();
+}
 
 // ---- backup: a file you keep somewhere safe, optionally locked with a password ----
 async function deriveKey(password, salt) {

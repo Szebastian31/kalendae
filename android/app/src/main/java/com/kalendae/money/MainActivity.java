@@ -291,12 +291,12 @@ public class MainActivity extends Activity {
             }
         }
 
-        /** Downloads the exchange-rate table. Only the National Bank of Poland's API is allowed. */
+        /** Downloads exchange rates. Only the three public rate APIs (NBP, Frankfurter, currency-api) are allowed. */
         @JavascriptInterface
         public String fetchRates(String url) {
             try {
                 java.net.URL u = new java.net.URL(url);
-                if (!"https".equals(u.getProtocol()) || !"api.nbp.pl".equals(u.getHost())) return "";
+                if (!"https".equals(u.getProtocol()) || !java.util.Arrays.asList("api.nbp.pl", "api.frankfurter.dev", "cdn.jsdelivr.net").contains(u.getHost())) return "";
                 java.net.HttpURLConnection cn = (java.net.HttpURLConnection) u.openConnection();
                 cn.setConnectTimeout(10000);
                 cn.setReadTimeout(12000);

@@ -28,15 +28,21 @@ function expectedNow(a) {
 // applies one check-in and learns from it; returns what happened, for the summary
 function applyCheckin(a, actual) {
   const e = expectedNow(a);
-  // money gone that wasn't planned: what you didn't log, plus the everyday spends you did log (already off the balance)
-  const unlogged = e.v - (a.type === 'card' ? -actual : actual);
-  const logged = loggedUnsettled(a);
-  const spent = unlogged < -0.5 ? unlogged : unlogged + logged;
-  const res = { a, days: e.days, spent, logged, perDay: e.days ? spent / e.days : 0, before: a.everyday || 0 };
-  if (e.days >= 2 && spent > -0.5) {
-    a.spendHist = (a.spendHist || []).concat([+res.perDay.toFixed(2)]).slice(-8);
-    const learned = a.spendHist.reduce((s, x) => s + x, 0) / a.spendHist.length * 30.44;
-    a.everyday = Math.round(a.spendHist.length < 2 && a.everyday ? (a.everyday + learned) / 2 : learned);
+  let res;
+  if (isGrowth(a) && !countsToSpend(a)) {
+    // savings and investments: the difference is interest, round-ups or the market moving, never everyday spending
+    res = { a, days: e.days, growth: actual - e.v };
+  } else {
+    // money gone that wasn't planned: what you didn't log, plus the everyday spends you did log (already off the balance)
+    const unlogged = e.v - (a.type === 'card' ? -actual : actual);
+    const logged = loggedUnsettled(a);
+    const spent = unlogged < -0.5 ? unlogged : unlogged + logged;
+    res = { a, days: e.days, spent, logged, perDay: e.days ? spent / e.days : 0, before: a.everyday || 0 };
+    if (e.days >= 2 && spent > -0.5) {
+      a.spendHist = (a.spendHist || []).concat([+res.perDay.toFixed(2)]).slice(-8);
+      const learned = a.spendHist.reduce((s, x) => s + x, 0) / a.spendHist.length * 30.44;
+      a.everyday = Math.round(a.spendHist.length < 2 && a.everyday ? (a.everyday + learned) / 2 : learned);
+    }
   }
   S.checkins.push({ acct: a.id, d: todayISO(), expected: +e.v.toFixed(2), actual, days: e.days });
   S.checkins = S.checkins.slice(-200);
@@ -55,7 +61,8 @@ function dailySpread(a) {
   return conv(sd, a.cur);
 }
 
-const checkinDue = () => liveAccounts().filter(a => a.type !== 'card' && (!a.balanceAt || daysBetween(fromISO(a.balanceAt), day0()) >= 6));
+// savings and investments only need a look about once a month
+const checkinDue = () => liveAccounts().filter(a => a.type !== 'card' && (!a.balanceAt || daysBetween(fromISO(a.balanceAt), day0()) >= (isGrowth(a) ? 30 : 6)));
 
 function checkinSheet(onlyId) {
   const accts = liveAccounts().filter(a => !onlyId || a.id === onlyId);
@@ -70,7 +77,7 @@ function checkinSheet(onlyId) {
       ${notes ? `<div class="notes">${notes.map(n => `<label>${fmt(n, a.cur)} ×<input class="num" data-n="${n}" inputmode="numeric" placeholder="0"></label>`).join('')}
           <label>${t('Coins')}<input class="num" data-n="coins" inputmode="decimal" placeholder="0"></label></div>
         <div class="sub cashTotal"></div>`
-        : `<input class="input money num" inputmode="decimal" placeholder="${a.type === 'card' ? t('Owed now') : t('Balance now')}" data-bal>`}
+        : `<input class="input money num" inputmode="decimal" placeholder="${a.type === 'card' ? t('Owed now') : a.type === 'invest' ? t('Value now') : t('Balance now')}" data-bal>`}
     </div>`;
   }).join('');
   openSheet(`<h2>${onlyId ? t('Check in') : t('Weekly check-in')}</h2>
@@ -107,6 +114,11 @@ function checkinSheet(onlyId) {
 function checkinResult(results) {
   const lines = results.map(r => {
     const a = r.a, name = `<b>${esc(a.name)}</b>`;
+    if (r.growth != null) {
+      if (!r.days || Math.abs(r.growth) < 0.5) return `<li>${t('{a} updated.', { a: name })}</li>`;
+      return `<li>${r.growth > 0 ? t('{a}: up {v} since the last check, from interest, round-ups or the market.', { a: name, v: fmt(r.growth, a.cur) })
+        : t('{a}: down {v} since the last check. Savings and investments go up and down; it isn’t counted as spending.', { a: name, v: fmt(-r.growth, a.cur) })}</li>`;
+    }
     if (!r.days) return `<li>${t('{a} updated.', { a: name })}</li>`;
     if (r.spent < -0.5) return `<li>${t('{a}: {v} more than expected. Money came in that Kalendae doesn’t know about. If it repeats, add it as income.', { a: name, v: fmt(-r.spent, a.cur) })}</li>`;
     const usual = r.before ? r.before / 30.44 : null;
@@ -116,7 +128,8 @@ function checkinResult(results) {
                      : tn(r.days, '{a}: {v} went on everyday things in {n} day, about {d} a day.', '{a}: {v} went on everyday things in {n} days, about {d} a day.', vars)}${r.logged > 0.5 ? ' ' + t('You logged {v} of it.', { v: fmt(r.logged, a.cur) }) : ''}</li>`;
   }).join('');
   const learned = results.filter(r => r.a.everyday).map(r => t('{v} a month from {a}', { v: fmt(r.a.everyday, r.a.cur), a: esc(r.a.name) })).join(', ');
+  const spending = results.some(r => r.growth == null);
   openSheet(`<h2>${t('Checked in')}</h2><ul class="cires">${lines}</ul>
-    <p class="sub" style="margin-top:12px">${t('Kalendae now expects about {v} in everyday spending. The forecast’s range narrows as you check in each week.', { v: `<b>${learned || t('what you set')}</b>` })}</p>
+    ${spending ? `<p class="sub" style="margin-top:12px">${t('Kalendae now expects about {v} in everyday spending. The forecast’s range narrows as you check in each week.', { v: `<b>${learned || t('what you set')}</b>` })}</p>` : ''}
     <button class="btn wide" style="margin-top:14px" id="ciOk">${t('Done')}</button>`, body => $('#ciOk', body).onclick = closeSheet);
 }

@@ -53,7 +53,7 @@ function settingsSheet() {
       <button class="btn ghost wide" style="margin-top:8px" id="sDemo">${t('Load sample data')}</button></div>
 
     <div class="field"><label>${t('Start over')}</label><button class="btn danger wide" id="sWipe">${t('Delete everything on this phone')}</button></div>
-    <p class="honest">${t('Kalendae {v} · the only thing it downloads is the exchange-rate table from the National Bank of Poland.', { v: NATIVE ? NATIVE.version() : 'web' })}</p>`;
+    <p class="honest">${t('Kalendae {v} · the only things it downloads are public exchange rates (NBP, Frankfurter and currency-api). Nothing about you is sent.', { v: NATIVE ? NATIVE.version() : 'web' })}</p>`;
 
   openSheet(html, body => {
     $('#sLang', body).onchange = e => setLanguage(e.target.value);
@@ -72,7 +72,7 @@ function settingsSheet() {
     $('#sRates', body).onclick = async () => {
       toast(t('Downloading rates…'));
       const ok = await refreshRates(true);
-      toast(ok ? t('Rates updated') : t('Couldn’t reach the National Bank of Poland'));
+      toast(ok ? t('Rates updated') : t('Couldn’t download the rates'));
       if (ok) { save(); settingsSheet(); }
     };
     if (NATIVE) {
@@ -153,7 +153,8 @@ function sampleState() {
   s.accounts = [
     A('per', t('Personal'), 'bank', 'PLN', 4650, 0, { provider: 'mBank', everyday: 2600, spendHist: [78, 96, 81, 90] }),
     A('sh', t('Home'), 'bank', 'PLN', 2140, 1, { provider: 'ING Bank Śląski', shared: true, partner: 'Ola', everyday: 2100 }),
-    A('sav', t('Buffer'), 'savings', 'PLN', 9200, 2, { provider: 'mBank' }),
+    A('sav', t('Buffer'), 'savings', 'PLN', 9200, 2, { provider: 'mBank', roundup: { from: 'per', mode: 'round', step: 10, times: 2, pct: 5 } }),
+    A('inv', t('Investments'), 'invest', 'USD', 3400, 6, { provider: 'XTB', balanceAt: d(-12) }),
     A('rev', 'Revolut', 'emoney', 'EUR', 420, 3, { provider: 'Revolut', everyday: 90 }),
     A('pp', 'PayPal', 'wallet', 'USD', 312, 4, { provider: 'PayPal' }),
     A('cash', t('Cash'), 'cash', 'PLN', 260, 5, { provider: t('Wallet'), everyday: 360 }),
@@ -163,13 +164,18 @@ function sampleState() {
     I(t('Salary'), 'income', 8400, 'per', dom(10)),
     I(t('To shared account'), 'move', 2500, 'per', dom(10), { to: 'sh', inName: t('From {a}', { a: t('Personal') }) }),
     I(t('To savings'), 'move', 1200, 'per', dom(10), { to: 'sav', inName: t('From {a}', { a: t('Personal') }) }),
-    I(t('Investing'), 'move', 150, 'per', dom(11), { to: null, cur: 'USD' }),
+    I(t('Investing'), 'move', 150, 'per', dom(11), { to: 'inv', cur: 'USD', inName: t('From {a}', { a: t('Personal') }) }),
     I(t('Cash withdrawal'), 'move', 300, 'per', dom(12), { to: 'cash', inName: t('From {a}', { a: t('Personal') }) }),
     I('Ola', 'income', 2500, 'sh', dom(28)),
     I(t('Freelance'), 'income', 450, 'pp', dom(15), { varies: true }),
     I(t('Rent'), 'bill', 3600, 'sh', dom(1)),
     I(t('Internet'), 'bill', 69, 'sh', dom(5)),
     I(t('Electricity'), 'bill', 210, 'sh', dom(15), { varies: true }),
+    // heating: cheap in summer, dear in winter; a year of real bills, so the forecast plans this winter at last winter's price
+    I(t('Heating'), 'bill', 420, 'sh', dom(20), { varies: true, actuals: Array.from({ length: 12 }, (_, i) => {
+      const m = new Date(day0().getFullYear(), day0().getMonth() - 12 + i, 20);
+      return { d: isoDay(m), v: [980, 940, 760, 450, 160, 60, 50, 50, 70, 260, 610, 890][m.getMonth()] };
+    }) }),
     I(t('Phone'), 'bill', 55, 'per', dom(12)),
     I(t('Car insurance'), 'bill', 1240, 'per', d(6), { repeat: 'year' }),
     I('Netflix', 'sub', 67, 'sh', dom(24), { usage: 'monthly', prices: [{ d: d(-200), v: 60 }, { d: d(-20), v: 67 }], altMonthly: 33 }),
@@ -180,6 +186,7 @@ function sampleState() {
     I('Lightroom', 'sub', 54.99, 'per', dom(26), { usage: 'never', alt: 539 }),
     I('Proton Mail', 'sub', 4.99, 'rev', dom(30), { usage: 'daily' }),
     I('Duolingo Max', 'sub', 239.99, 'per', d(3), { repeat: 'year', trial: true }),
+    I('Disney+', 'sub', 37.99, 'sh', d(-40), { usage: 'monthly', until: d(-41), cancelled: d(-50) }),
   ];
   // purchases logged on the go; the ones since the last check-in (3 days ago) are already off the balances above
   const P = (id, acct, amount, cat, note, day, extra) => Object.assign({ id, acct, amount, amt: amount, cur: s.accounts.find(a => a.id === acct).cur, cat, note,

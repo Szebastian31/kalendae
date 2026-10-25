@@ -19,12 +19,16 @@ No app store, no account, no bank login, no ads. Everything stays on your phone.
 - **Safe to spend until payday.** Adds up the accounts you spend from day to day (banks, wallet apps, e-money and cash, counting only your share of shared ones; savings and investments stay out), subtracts every bill, subscription and move dated before your next income and the cushion you choose to keep, and shows what's left, per day.
 - **The month's orbit.** The next 30 days on three rings: money in and moves, monthly bills and subscriptions, and everything else including trials. Tap a dot to see what lands that day.
 - **A 60-day forecast with a likely range.** Each account's balance day by day, with an 80% band that's wider when your everyday spending varies and narrower as you check in.
-- **Every account, every currency.** Banks, savings, cards, PayPal, Revolut, Wise, Cash App, Venmo, BLIK, cash and about 400 banks and services worldwide, or any name you type. 33 currencies, converted at a 30-day average of the National Bank of Poland's rates.
+- **Every account, every currency.** Banks, savings, cards, PayPal, Revolut, Wise, Cash App, Venmo, BLIK, cash and about 400 banks and services worldwide, or any name you type. 33 currencies, converted at a 30-day average of public rates from three sources (the National Bank of Poland, Frankfurter and currency-api), so one bad download can't skew them.
 - **Shared accounts.** A joint account or a pot you split 50/50 or by share. Only your part counts in what's yours.
 - **Moves in any currency.** Count a move in the currency it really is, like USD stocks or EUR savings.
+- **Savings and investments.** Savings, stocks and other investments are kept apart from everyday money: their ups and downs never count as spending. Move money in or out (to Revolut, cash or anywhere) and both balances change at once. Round-ups too: if your bank rounds each card payment up to the next 1, 5 or 10 (or doubles it), or puts a % aside, spends you log add it to your savings on their own.
 - **Subscriptions that earn their place.** Usage, price rises, cheaper plans and overlap vote keep, review or cancel, shown as a ring.
 - **Trials.** Kalendae warns you 2 days before a trial turns paid, and on the day.
+- **Cancelled subscriptions.** Mark a subscription as cancelled and it stops counting after the last day you paid for. It then waits in a Cancelled list, like the Play Store's, with the day it expired and a Renew button.
+- **Real bills, not just estimates.** For bills that change, like heating or electricity, type what each one really came to. A chart shows them against your estimate and your average, and the forecast uses last year's bill from the same time of year, so winter heating isn't planned at the summer price.
 - **Log a spend in seconds.** Tap **+**, type the amount and pick the account. It comes straight off that balance, so "safe to spend" stays true between check-ins. Add a photo of the receipt for returns, warranties or receipt apps like Google Opinion Rewards; save it to your gallery or share it from Kalendae.
+- **Spending at a glance.** A bar chart of the last 14 days, 30 days or 12 weeks against your usual everyday spending. Tap a bar to see the amount.
 - **Weekly check-in.** Type today's balances (or count your cash note by note) and Kalendae works out what went on everyday things, then learns your real everyday spending.
 - **Payday plan.** When income lands: what goes to bills, savings and everyday life, and what's free.
 - **Notifications, not alarms.** One quiet notification a day around the time you choose, like Consensus Weather, even when the app is closed.
@@ -68,7 +72,7 @@ Kalendae is a forecast, not a bank statement. It only knows what you tell it: th
 
 ## Privacy
 
-Everything stays on your phone. Your accounts, amounts, dates and receipt photos are saved on your device only and never uploaded. The only thing Kalendae downloads is the public exchange-rate table from the National Bank of Poland. Backups are files you save yourself (receipt photos included), optionally locked with a password (AES-256).
+Everything stays on your phone. Your accounts, amounts, dates and receipt photos are saved on your device only and never uploaded. The only things Kalendae downloads are public exchange rates from the National Bank of Poland, Frankfurter and currency-api. Backups are files you save yourself (receipt photos included), optionally locked with a password (AES-256).
 
 ---
 
@@ -83,7 +87,7 @@ The interface is plain HTML, CSS and JavaScript, hosted on GitHub Pages. The And
 | Where | What it is |
 | --- | --- |
 | `index.html` | Layout and styles |
-| `js/` | The app. `store.js` saving and backups, `money.js` currencies and NBP rates, `items.js` the forecast maths, `subs.js` the keep / review / cancel vote, `checkin.js` check-ins, `spend.js` logged spends and receipts, `notify.js` notifications, `today.js` `forecast.js` `commit.js` `accounts.js` `settings.js` the screens, `banks.js` banks around the world, `ui.js` helpers, `app.js` the shell |
+| `js/` | The app. `store.js` saving and backups, `money.js` currencies and exchange rates (NBP, Frankfurter and currency-api, averaged), `items.js` the forecast maths, `subs.js` the keep / review / cancel vote, `checkin.js` check-ins, `spend.js` logged spends and receipts, `notify.js` notifications, `today.js` `forecast.js` `commit.js` `accounts.js` `settings.js` the screens, `banks.js` banks around the world, `charts.js` the bar charts, `ui.js` helpers and swipe-to-close sheets, `app.js` the shell |
 | `js/i18n.js`, `js/i18n/` | Languages: `t('English text')` in the code, one file per language mapping each text to its translation |
 | `icons/` | The icon (`icon.js` draws it, `icon.svg`), the PNGs, and `export.html`, which makes the PNGs |
 | `manifest.webmanifest`, `sw.js` | Home-screen install and offline cache |

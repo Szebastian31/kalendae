@@ -2,7 +2,9 @@
 // and the maths that turns them into a day-by-day forecast and "safe to spend".
 // An item: { id, kind, name, amount (positive, in its account's currency), acct, to (moves only),
 //            start (next date, yyyy-mm-dd), repeat (see REPEATS), trial (sub: start = when the trial ends),
-//            varies (amount is an average), paused, note }
+//            varies (amount is an average), paused, note,
+//            until (last day it runs: a cancelled subscription is paid up to here), cancelled (the day you cancelled),
+//            actuals ([{ d, v }]: what a bill that changes really came to, newest last) }
 const KINDS = {
   income: { one: t('Income'), many: t('Income'), sign: 1, icon: '<path d="M12 19V5M6 11l6-6 6 6"/>' },
   bill:   { one: t('Bill'), many: t('Bills'), sign: -1, icon: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>' },
@@ -43,11 +45,12 @@ function occurrences(it, n, fromDay = 0) {
   const [, unit, every] = REPEATS[it.repeat] || REPEATS.month;
   let d = fromISO(it.start);
   const anchor = d.getDate();
-  if (unit === 'once') { const k = daysBetween(t0, d); if (k >= fromDay && k <= n) out.push(k); return out; }
+  const end = it.until ? fromISO(it.until) : null; // cancelled: nothing after the last paid day
+  if (unit === 'once') { const k = daysBetween(t0, d); if (k >= fromDay && k <= n && !(end && d > end)) out.push(k); return out; }
   for (let g = 0; g < 4000 && daysBetween(t0, d) < fromDay; g++) d = stepDate(d, unit, every, anchor);
   for (let g = 0; g < 400; g++) {
     const k = daysBetween(t0, d);
-    if (k > n) break;
+    if (k > n || (end && d > end)) break;
     out.push(k);
     d = stepDate(d, unit, every, anchor);
   }
@@ -55,11 +58,14 @@ function occurrences(it, n, fromDay = 0) {
 }
 const nextIn = (it, max = 800) => { const o = occurrences(it, max, 0); return o.length ? o[0] : null; };
 const dateIn = k => addDays(day0(), k);
-const isTrialNow = it => it.kind === 'sub' && it.trial && nextIn(it) != null && fromISO(it.start) >= day0();
+const isTrialNow = it => it.kind === 'sub' && it.trial && !it.until && nextIn(it) != null && fromISO(it.start) >= day0();
+// a subscription you've cancelled: still running until `until`, then ended
+const isCancelled = it => !!it.until;
+const hasEnded = it => !!it.until && it.until < todayISO();
 
 // what an item costs (or brings) per month, in its own currency
 function perMonth(it) {
-  if (it.paused) return 0;
+  if (it.paused || it.until) return 0;
   const [, unit, every] = REPEATS[it.repeat] || REPEATS.month;
   if (unit === 'once') return 0;
   return it.amount * (unit === 'week' ? 52 / 12 / every : unit === 'year' ? 1 / 12 / every : 1 / every);
@@ -78,6 +84,15 @@ function removeItem(id) { S.items = S.items.filter(it => it.id !== id); save(); 
 // everyday spending per day, in the display currency
 const dailySpend = a => a && a.everyday ? conv(a.everyday / 30.44, a.cur) : 0;
 
+// What a bill is expected to be on day k. One that changes with the seasons (heating, electricity) uses the
+// bill you logged around the same date last year, so winter isn't planned at the summer price; otherwise your average.
+function amountOn(it, k) {
+  if (!it.varies || !it.actuals || !it.actuals.length) return it.amount;
+  const d = dateIn(k), ago = new Date(d.getFullYear() - 1, d.getMonth(), d.getDate());
+  const near = it.actuals.filter(x => Math.abs(daysBetween(fromISO(x.d), ago)) <= 16);
+  return near.length ? near[near.length - 1].v : it.amount;
+}
+
 // ---- forecast: balance per day for one account or several, in the display currency ----
 function forecast(ids, n = HORIZON) {
   const set = new Set(ids);
@@ -91,10 +106,10 @@ function forecast(ids, n = HORIZON) {
     const inSrc = set.has(src.id), inDst = !!dst && set.has(dst.id);
     if (!inSrc && !inDst) return;
     if (inSrc && inDst && w(src) === w(dst)) return; // a move between your own accounts isn't spending
-    const v = conv(it.amount, itemCur(it)) * KINDS[it.kind].sign;
+    const v = k => conv(amountOn(it, k), itemCur(it)) * KINDS[it.kind].sign;
     occurrences(it, n, 0).forEach(k => {
-      if (inSrc && !(k === 0 && src.balanceAt >= today)) ev[k].push({ it, a: v * w(src), name: it.name, acct: src });
-      if (inDst && !(k === 0 && dst.balanceAt >= today)) ev[k].push({ it, a: -v * w(dst), name: it.inName || t('From {a}', { a: src.name }), acct: dst });
+      if (inSrc && !(k === 0 && src.balanceAt >= today)) ev[k].push({ it, a: v(k) * w(src), name: it.name, acct: src });
+      if (inDst && !(k === 0 && dst.balanceAt >= today)) ev[k].push({ it, a: -v(k) * w(dst), name: it.inName || t('From {a}', { a: src.name }), acct: dst });
     });
   });
   const accts = ids.map(accountById).filter(Boolean);
@@ -189,9 +204,9 @@ function paydayPlan() {
     const src = accountById(it.acct), dst = it.kind === 'move' && it.to ? accountById(it.to) : null;
     const inDst = !!dst && ids.has(dst.id);
     if (inDst && w(src) === w(dst)) return; // only moving money between your spending accounts
-    const times = occurrences(it, p2 - 1, p1).length;
-    if (!times) return;
-    const amt = conv(it.amount, itemCur(it)) * times;
+    const times = occurrences(it, p2 - 1, p1);
+    if (!times.length) return;
+    const amt = times.reduce((s, k) => s + conv(amountOn(it, k), itemCur(it)), 0);
     const v = amt * w(src) - (inDst ? amt * w(dst) : 0); // into a shared spending account, only the part that stops being yours
     if (it.kind === 'move') moves[it.name] = (moves[it.name] || 0) + v; else bills += v;
   });
