@@ -67,9 +67,28 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
-        edgeToEdge();
-        MoneyNotifier.createChannels(this);
-        MoneyNotifier.scheduleAll(this);
+        // If Kalendae crashed last time, show what happened instead of crashing again, so it can be sent on.
+        // Your money data isn't touched: it's in the WebView's storage, not here.
+        final File crash = new File(getFilesDir(), "crash.txt");
+        final Thread.UncaughtExceptionHandler prev = Thread.getDefaultUncaughtExceptionHandler();
+        Thread.setDefaultUncaughtExceptionHandler((th, e) -> {
+            try (FileOutputStream o = new FileOutputStream(crash)) {
+                java.io.StringWriter sw = new java.io.StringWriter();
+                java.io.PrintWriter pw = new java.io.PrintWriter(sw);
+                e.printStackTrace(pw);
+                pw.flush();
+                String head = "Kalendae " + appVersion() + " · Android " + Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ") · " + Build.MANUFACTURER + " " + Build.MODEL + "\n\n";
+                o.write((head + sw).getBytes(StandardCharsets.UTF_8));
+            } catch (Exception ignored) {}
+            if (prev != null) prev.uncaughtException(th, e);
+        });
+        if (crash.exists()) { showCrash(crash); return; }
+
+        try { edgeToEdge(); } catch (Exception ignored) {}
+        try {
+            MoneyNotifier.createChannels(this);
+            MoneyNotifier.scheduleAll(this);
+        } catch (Exception ignored) {}
         clearCache("camera");
         clearCache("shared");
 
@@ -80,7 +99,7 @@ public class MainActivity extends Activity {
         root.addView(web, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
         setContentView(root);
         // the bars' heights go to the page; the keyboard shrinks the page instead, so the field you type in stays visible
-        root.setOnApplyWindowInsetsListener((v, ins) -> {
+        root.setOnApplyWindowInsetsListener((v, ins) -> { try {
             int top, bottom, ime;
             if (Build.VERSION.SDK_INT >= 30) {
                 Insets bars = ins.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
@@ -98,6 +117,7 @@ public class MainActivity extends Activity {
             insetTop = Math.round(top / d);
             insetBottom = ime > 0 ? 0 : Math.round(bottom / d);
             pushInsets();
+            } catch (Exception ignored) {}
             return ins;
         });
 
@@ -163,11 +183,70 @@ public class MainActivity extends Activity {
         });
         web.addJavascriptInterface(new Bridge(), "KalendaeNative");
         // Android 16 no longer calls onBackPressed for apps targeting it; back arrives here instead
-        if (Build.VERSION.SDK_INT >= 33)
+        if (Build.VERSION.SDK_INT >= 33) try {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::goBack);
+        } catch (Exception ignored) {}
 
         if (state != null) web.restoreState(state);
         else web.loadUrl(START);
+    }
+
+    /** What went wrong last time, with Share (to send it on) and Try again. Plain Android views only, nothing that could fail the same way. */
+    private void showCrash(File crash) {
+        String text;
+        try { text = new String(java.nio.file.Files.readAllBytes(crash.toPath()), StandardCharsets.UTF_8); }
+        catch (Exception e) { text = "(the error report couldn't be read)"; }
+        final String report = text;
+        float d = getResources().getDisplayMetrics().density;
+        int pad = Math.round(20 * d);
+
+        android.widget.LinearLayout box = new android.widget.LinearLayout(this);
+        box.setOrientation(android.widget.LinearLayout.VERTICAL);
+        box.setBackgroundColor(Color.parseColor(NIGHT));
+        box.setPadding(pad, Math.round(56 * d), pad, Math.round(32 * d));
+
+        android.widget.TextView title = new android.widget.TextView(this);
+        title.setText("Kalendae stopped last time");
+        title.setTextColor(Color.WHITE);
+        title.setTextSize(22);
+        box.addView(title);
+
+        android.widget.TextView lead = new android.widget.TextView(this);
+        lead.setText("Your data is safe. Tap Share and send this to whoever is fixing the app, then Try again.");
+        lead.setTextColor(Color.parseColor("#B8C2E0"));
+        lead.setTextSize(15);
+        lead.setPadding(0, Math.round(8 * d), 0, Math.round(14 * d));
+        box.addView(lead);
+
+        android.widget.LinearLayout row = new android.widget.LinearLayout(this);
+        android.widget.Button share = new android.widget.Button(this);
+        share.setText("Share");
+        share.setOnClickListener(v -> {
+            Intent i = new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, report);
+            try { startActivity(Intent.createChooser(i, "Share")); } catch (Exception ignored) {}
+        });
+        android.widget.Button again = new android.widget.Button(this);
+        again.setText("Try again");
+        again.setOnClickListener(v -> { crash.delete(); recreate(); });
+        row.addView(share);
+        row.addView(again);
+        box.addView(row);
+
+        android.widget.TextView log = new android.widget.TextView(this);
+        log.setText(report);
+        log.setTextColor(Color.parseColor("#DFE6F2"));
+        log.setTextSize(11);
+        log.setTypeface(android.graphics.Typeface.MONOSPACE);
+        log.setTextIsSelectable(true);
+        log.setPadding(0, Math.round(14 * d), 0, 0);
+        android.widget.ScrollView scroll = new android.widget.ScrollView(this);
+        scroll.addView(log);
+        box.addView(scroll, new android.widget.LinearLayout.LayoutParams(-1, 0, 1f));
+        setContentView(box);
+    }
+
+    private String appVersion() {
+        try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception e) { return "?"; }
     }
 
     /** Draw behind the status bar and the gesture bar, with both bars see-through. */
@@ -206,12 +285,13 @@ public class MainActivity extends Activity {
     @Override
     protected void onSaveInstanceState(Bundle out) {
         super.onSaveInstanceState(out);
-        web.saveState(out);
+        if (web != null) web.saveState(out);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        if (web == null) return;
         web.onResume();
         // a new day may have started, or a notification was tapped
         web.evaluateJavascript("window.kalendaeResume&&kalendaeResume()", null);
@@ -219,7 +299,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onPause() {
-        web.onPause();
+        if (web != null) web.onPause();
         super.onPause();
     }
 
@@ -232,6 +312,7 @@ public class MainActivity extends Activity {
 
     /** Back closes an open sheet first; otherwise Kalendae goes to the background instead of quitting. */
     private void goBack() {
+        if (web == null) { finish(); return; }
         web.evaluateJavascript("window.kalendaeBack?kalendaeBack():false", v -> {
             if (!"true".equals(v)) moveTaskToBack(true);
         });
@@ -239,7 +320,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-        web.destroy();
+        if (web != null) web.destroy();
         super.onDestroy();
     }
 
