@@ -22,12 +22,35 @@ const liveSpends = () => S.spends.filter(sp => accountById(sp.acct));
 // ---- the balance effect ----
 // A spend dated on or after the account's last typed balance comes off that balance. Once you type a new
 // balance (or check in) it's "settled": the number you typed already includes it.
+// A round-up (sp.ru, in the paying account's currency) comes off with it and lands in the savings account sp.ruTo.
 function spendEffect(sp, sign) {
   const a = accountById(sp.acct);
   if (!a) return;
-  a.balance = Math.round((a.balance + (a.type === 'card' ? 1 : -1) * sp.amt * sign) * 100) / 100; // a card stores what you owe
+  a.balance = Math.round((a.balance + (a.type === 'card' ? 1 : -1) * (sp.amt + (sp.ru || 0)) * sign) * 100) / 100; // a card stores what you owe
 }
-function settleSpends(acctId) { S.spends.forEach(sp => { if (sp.acct === acctId && sp.applied) sp.settled = true; }); }
+function roundupEffect(sp, sign) {
+  const a = accountById(sp.acct), d = sp.ru && accountById(sp.ruTo);
+  if (!a || !d) return;
+  d.balance = Math.round((d.balance + conv(sp.ru, a.cur, d.cur) * sign) * 100) / 100;
+}
+function settleSpends(acctId) {
+  S.spends.forEach(sp => {
+    if (sp.acct === acctId && sp.applied) sp.settled = true;
+    if (sp.ruTo === acctId && sp.ruIn) sp.ruSettled = true;
+  });
+}
+// Round-ups: some banks put a little aside every time you pay by card, rounded up to the next 1, 5 or 10
+// (sometimes doubled), or a % of the payment. Set on the savings account; amt is in the paying account's currency.
+function roundupAmount(r, amt) {
+  const step = r.step || 1;
+  return Math.round((r.mode === 'percent' ? amt * (r.pct || 0) / 100 : (Math.ceil(amt / step - 1e-9) * step - amt) * (r.times || 1)) * 100) / 100;
+}
+function roundupFor(acctId, amt) {
+  const to = liveAccounts().find(x => x.roundup && x.roundup.from === acctId && x.id !== acctId);
+  if (!to || !(amt > 0)) return null;
+  const v = roundupAmount(to.roundup, amt);
+  return v > 0 ? { to, v } : null;
+}
 // logged everyday spending not yet inside a typed balance, in the account's currency (for check-ins)
 function loggedUnsettled(a) {
   return S.spends.filter(sp => sp.acct === a.id && sp.applied && !sp.settled && sp.cat !== 'big').reduce((s, sp) => s + sp.amt, 0);
@@ -40,9 +63,14 @@ function saveSpend(sp, before) {
     sp.applied = true; sp.settled = true; // already inside a balance you typed; only the record changes
   } else {
     if (before && before.applied && !before.settled) spendEffect(before, -1);
+    if (before && before.ruIn && !before.ruSettled) roundupEffect(before, -1);
     sp.applied = sp.d >= (a.balanceAt || '0000-00-00');
     sp.settled = false;
+    const ru = sp.applied ? roundupFor(sp.acct, sp.amt) : null;
+    delete sp.ru; delete sp.ruTo; delete sp.ruIn; delete sp.ruSettled;
+    if (ru) { sp.ru = ru.v; sp.ruTo = ru.to.id; sp.ruIn = sp.d >= (ru.to.balanceAt || '0000-00-00'); sp.ruSettled = false; }
     if (sp.applied) spendEffect(sp, 1);
+    if (sp.ruIn) roundupEffect(sp, 1);
   }
   const i = S.spends.findIndex(x => x.id === sp.id);
   if (i < 0) S.spends.push(sp); else S.spends[i] = sp;
@@ -52,6 +80,7 @@ function saveSpend(sp, before) {
 }
 function removeSpend(sp) {
   if (sp.applied && !sp.settled) spendEffect(sp, -1);
+  if (sp.ruIn && !sp.ruSettled) roundupEffect(sp, -1);
   S.spends = S.spends.filter(x => x.id !== sp.id);
   if (sp.receipt) delReceipt(sp.id);
   save();
@@ -163,6 +192,32 @@ function mountSpendButtons(root) {
   $$('[data-sid]', root).forEach(r => r.onclick = () => spendSheet(S.spends.find(x => x.id === r.dataset.sid)));
 }
 
+// ---- what you logged, day by day (or week by week), next to your usual ----
+let spRange = 14;
+const SP_RANGES = { 14: t('14 days'), 30: t('30 days'), 84: t('12 weeks') };
+function spendChartHtml(list, filter) {
+  const step = spRange > 30 ? 7 : 1, n = spRange / step, t0 = day0();
+  const short = d => dfmt(d, { day: 'numeric', month: 'short' });
+  const bars = Array.from({ length: n }, (_, i) => {
+    const end = addDays(t0, -(n - 1 - i) * step), start = addDays(end, -(step - 1));
+    const from = isoDay(start), to = isoDay(end);
+    const v = list.filter(sp => sp.d >= from && sp.d <= to).reduce((s, sp) => s + conv(sp.amt, accountById(sp.acct).cur), 0);
+    return { v, label: step === 1 ? String(end.getDate()) : short(start),
+      tip: (step === 1 ? end.toLocaleDateString(LOCALE, { weekday: 'short', day: 'numeric', month: 'short' }) : `${short(start)} – ${short(end)}`) + ' · ' + fmt(v) };
+  });
+  // your usual: the everyday spending Kalendae has learned from check-ins (or the guess you typed)
+  const accts = filter === 'all' || filter === 'receipts' ? liveAccounts() : [accountById(filter)].filter(Boolean);
+  const usual = accts.reduce((s, a) => s + conv(a.everyday || 0, a.cur) * myShare(a), 0) / 30.44 * step;
+  const avg = bars.reduce((s, b) => s + b.v, 0) / n;
+  bars.forEach(b => { b.c = usual && b.v > usual * 1.15 ? 'var(--warn)' : 'var(--a3)'; });
+  const per = v => step === 1 ? t('≈ {v} a day', { v: fmt(v) }) : `${fmt(v)} ${t('a week')}`;
+  return `<div class="card" style="padding:12px 14px">
+    <div class="chips" id="spR">${Object.entries(SP_RANGES).map(([k, name]) => `<button class="chip ${+k === spRange ? 'on' : ''}" data-r="${k}">${name}</button>`).join('')}</div>
+    ${barChartSvg(bars, [usual ? { v: usual, dash: true } : null, { v: avg, color: 'var(--ink)' }].filter(Boolean))}
+    <div class="cap" id="spCap"></div>
+    <div class="fkeys">${usual ? `<span><i class="dash"></i>${t('Your usual')} · ${per(usual)}</span>` : ''}<span><i style="background:var(--ink)"></i>${t('Your average')} · ${per(avg)}</span></div></div>`;
+}
+
 // ---- all spending ----
 function spendsSheet(filter = 'all') {
   const list = liveSpends().filter(sp => filter === 'all' || (filter === 'receipts' ? sp.receipt : sp.acct === filter)).slice().reverse();
@@ -171,6 +226,7 @@ function spendsSheet(filter = 'all') {
   const chips = [['all', t('Everything')], ['receipts', t('With receipts')]].concat(liveAccounts().filter(a => S.spends.some(sp => sp.acct === a.id)).map(a => [a.id, a.name]));
   openSheet(`<h2>${t('All spending')}</h2>
     <div class="chips" id="spF" style="margin:6px 0 4px">${chips.map(([k, n]) => `<button class="chip ${k === filter ? 'on' : ''}" data-f="${k}">${esc(n)}</button>`).join('')}</div>
+    ${list.length ? spendChartHtml(list, filter) : ''}
     ${Object.keys(months).length ? Object.entries(months).map(([k, rows]) => {
       const total = rows.reduce((s, sp) => s + conv(sp.amt, accountById(sp.acct).cur), 0);
       return `<div class="grp" style="display:flex;justify-content:space-between;margin-top:16px"><span>${dfmt(fromISO(k + '-01'), { month: 'long', year: 'numeric' })}</span><span class="num">${fmt(total)}</span></div>
@@ -178,6 +234,8 @@ function spendsSheet(filter = 'all') {
     }).join('') : `<p class="sub" style="margin-top:16px">${t('Nothing logged here yet.')}</p>`}
     <div class="row2"><button class="btn ghost" id="spX">${t('Done')}</button><button class="btn" id="spN">${svg('<path d="M12 5v14M5 12h14"/>')} ${t('Log a spend')}</button></div>`, body => {
     $$('#spF [data-f]', body).forEach(b => b.onclick = () => spendsSheet(b.dataset.f));
+    $$('#spR [data-r]', body).forEach(b => b.onclick = () => { tick('8'); spRange = +b.dataset.r; spendsSheet(filter); });
+    mountBars(body, '#spCap');
     $$('[data-sid]', body).forEach(r => r.onclick = () => spendSheet(S.spends.find(x => x.id === r.dataset.sid), () => spendsSheet(filter)));
     $('#spX', body).onclick = closeSheet;
     $('#spN', body).onclick = () => spendSheet(null, () => spendsSheet(filter));
@@ -194,11 +252,19 @@ function spendSheet(existing, back, preset) {
   let photo = null;          // a new photo picked in this sheet (Blob), or 'remove'
   let photoUrl = null;
   const release = () => { if (photoUrl) URL.revokeObjectURL(photoUrl); photoUrl = null; };
+  const isAlready = a => sp.d < (a.balanceAt || '0000-00-00') || (existing && existing.settled && existing.acct === sp.acct);
+  // the round-up that goes with it: as worked out for a spend already inside a typed balance, a preview otherwise
+  const ruNote = () => {
+    const a = accountById(sp.acct);
+    const r = isAlready(a) ? (existing && existing.ru && accountById(existing.ruTo) ? { v: existing.ru, to: accountById(existing.ruTo) } : null)
+      : sp.amount ? roundupFor(sp.acct, conv(sp.amount, sp.cur, a.cur)) : null;
+    return r ? ' ' + t('Plus a {v} round-up into {a}.', { v: fmt(r.v, a.cur), a: esc(r.to.name) }) : '';
+  };
 
   const draw = () => {
     const a = accountById(sp.acct);
     const curs = [...new Set([a.cur, ...S.settings.currencies])];
-    const already = sp.d < (a.balanceAt || '0000-00-00') || (existing && existing.settled && existing.acct === sp.acct);
+    const already = isAlready(a);
     const hasPhoto = photo instanceof Blob || (photo !== 'remove' && sp.receipt);
     return `<h2>${existing ? esc(spendLabel(existing)) : t('Log a spend')}</h2>
       <div class="field"><label>${t('Amount')}</label>
@@ -220,7 +286,7 @@ function spendSheet(existing, back, preset) {
       <p class="sub" style="margin-top:14px">${already
         ? t('Already in the balance you typed for {a} on {d}, so it’s kept as a record only.', { a: esc(a.name), d: dfmt(fromISO(a.balanceAt), { day: 'numeric', month: 'short' }) })
         : sp.cat === 'big' ? t('Comes off {a} straight away. A one-off isn’t counted as everyday spending.', { a: esc(a.name) })
-        : t('Comes off {a} straight away, so “safe to spend” stays true.', { a: esc(a.name) })}</p>
+        : t('Comes off {a} straight away, so “safe to spend” stays true.', { a: esc(a.name) })}<span id="sRu">${ruNote()}</span></p>
       <div class="row2">${existing ? `<button class="btn danger" id="sDel">${t('Delete')}</button>` : `<button class="btn ghost" id="sX">${t('Cancel')}</button>`}<button class="btn" id="sOk">${t('Save')}</button></div>`;
   };
   const keep = body => {
@@ -236,6 +302,7 @@ function spendSheet(existing, back, preset) {
       img.onclick = () => viewImage(img.src);
     }
     $$('#sCur [data-c]', body).forEach(b => b.onclick = () => { keep(body); sp.cur = b.dataset.c; redraw(); });
+    $('#sAmt', body).oninput = () => { keep(body); $('#sRu', body).innerHTML = ruNote(); };
     $$('#sAcct [data-a]', body).forEach(b => b.onclick = () => {
       keep(body);
       const prev = accountById(sp.acct);

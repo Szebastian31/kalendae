@@ -19,13 +19,14 @@ function itemRow(it) {
   const rep = REPEAT_SHORT[it.repeat] || REPEAT_SHORT.month;
   const to = it.kind === 'move' ? ` → ${it.to ? esc((accountById(it.to) || {}).name || '?') : t('outside')}` : '';
   const meta = [`<span class="dot" style="background:${accColor(a)}"></span>${esc(a.name)}${to}`, it.paused ? t('paused') : rep, it.varies ? t('average') : ''].filter(Boolean).join(' · ');
-  // subscriptions get their keep / review / cancel ring instead of the date
-  const vd = it.kind === 'sub' && !isTrialNow(it) && !it.paused ? subVerdict(it) : null;
+  // subscriptions get their keep / review / cancel ring instead of the date (not once you've cancelled one)
+  const vd = it.kind === 'sub' && !isTrialNow(it) && !it.paused && !isCancelled(it) ? subVerdict(it) : null;
   const lead = vd ? `<div class="when vr">${ringSvg(subSignals(it).map(s => s[0] === vd), 34, VERDICT[vd][1])}</div>`
     : `<div class="when">${when ? `${dfmt(when, { month: 'short' })}<b>${when.getDate()}</b>` : '—'}</div>`;
+  const ends = isCancelled(it) ? `<span class="tag">${t('Ends {d}', { d: dfmt(fromISO(it.until), { day: 'numeric', month: 'short' }) })}</span>` : '';
   return `<li class="it" data-id="${it.id}">
     ${lead}
-    <div><div class="nm">${esc(it.name)}${isTrialNow(it) ? `<span class="tag">${t('Trial')}</span>` : ''}</div><div class="meta">${meta}${vd && when ? ' · ' + t('next {d}', { d: dfmt(when, { day: 'numeric', month: 'short' }) }) : ''}</div></div>
+    <div><div class="nm">${esc(it.name)}${isTrialNow(it) ? `<span class="tag">${t('Trial')}</span>` : ''}${ends}</div><div class="meta">${meta}${vd && when ? ' · ' + t('next {d}', { d: dfmt(when, { day: 'numeric', month: 'short' }) }) : ''}</div></div>
     <div class="amt num ${sign > 0 ? 'pos' : ''}">${sign > 0 ? '+' : ''}${b.main}${b.approx ? `<small>${b.approx}</small>` : ''}${vd ? `<span class="verdict" style="color:${VERDICT[vd][1]}">${VERDICT[vd][0]}</span>` : ''}</div></li>`;
 }
 
@@ -37,7 +38,9 @@ function renderCommit() {
     $('#cGo').onclick = () => { showTab('accounts'); accountSheet(); };
     return;
   }
-  const items = liveItems();
+  const all = liveItems();
+  const ended = all.filter(it => it.kind === 'sub' && hasEnded(it)); // cancelled and past the last paid day
+  const items = all.filter(it => !hasEnded(it));
   const trials = items.filter(isTrialNow).sort((x, y) => nextIn(x) - nextIn(y));
   let html = trials.map(it => {
     const k = nextIn(it), a = accountById(it.acct);
@@ -61,12 +64,12 @@ function renderCommit() {
       <div class="stat"><div class="k">${t('Subscriptions')}</div><div class="v num">${fmt(subs)}</div><div class="s">${t('{v} a year', { v: fmt(subs * 12) })}</div></div></div>
       <p class="sub" style="margin-top:10px">${t('Monthly equivalents: a yearly bill counts as 1/12 here.')}${S.accounts.some(a => a.shared) ? ' ' + t('Shared accounts are counted in full.') : ''}</p></div>`;
     // subscriptions worth a second look
-    const look = items.filter(it => it.kind === 'sub' && !isTrialNow(it) && !it.paused && subVerdict(it) !== 'k');
+    const look = items.filter(it => it.kind === 'sub' && !isTrialNow(it) && !it.paused && !isCancelled(it) && subVerdict(it) !== 'k');
     if (look.length) {
       const yearly = look.reduce((s, it) => s + conv(perMonth(it), itemCur(it)) * 12, 0);
       const unrated = look.filter(it => !it.usage).length;
       html += `<div class="card"><h3>${t('Worth a look')} <em>${t('{v} a year', { v: fmt(yearly) })}</em></h3>
-        <div class="agree">${ringSvg(items.filter(it => it.kind === 'sub' && !isTrialNow(it) && !it.paused).map(it => subVerdict(it) === 'k'), 78)}
+        <div class="agree">${ringSvg(items.filter(it => it.kind === 'sub' && !isTrialNow(it) && !it.paused && !isCancelled(it)).map(it => subVerdict(it) === 'k'), 78)}
         <p class="sub">${tn(look.length, '{n} subscription got a review or cancel vote: {names}.', '{n} subscriptions got a review or cancel vote: {names}.',
           { names: look.slice(0, 3).map(it => `<b>${esc(it.name)}</b>`).join(', ') + (look.length > 3 ? '…' : '') })}
         ${unrated ? tn(unrated, 'Rate how often you use it for a fairer vote.', 'Rate how often you use them for a fairer vote.') : t('Tap one to see why.')}</p></div></div>`;
@@ -78,15 +81,69 @@ function renderCommit() {
     });
     html += `<div class="kindgrid" style="margin-top:14px">${Object.entries(KINDS).map(([k, d]) => `<button data-new="${k}">${svg('<path d="M12 5v14M5 12h14"/>')}${d.one}</button>`).join('')}</div>`;
   }
+  // like the subscriptions page in Google Play: what you've cancelled, when it ran out, and a way back
+  if (ended.length) html += `<div class="card"><h3>${t('Cancelled')} <em>${ended.length}</em></h3><ul class="list">${ended.sort((x, y) => y.until.localeCompare(x.until)).map(it => {
+    const d = fromISO(it.until), a = accountById(it.acct);
+    return `<li class="it" data-ended="${it.id}"><div class="when">${dfmt(d, { month: 'short' })}<b>${d.getDate()}</b></div>
+      <div><div class="nm">${esc(it.name)}</div><div class="meta"><span class="dot" style="background:${accColor(a)}"></span>${t('Expired {d}', { d: dfmt(d, { day: 'numeric', month: 'short', year: 'numeric' }) })} · ${fmt(it.amount, itemCur(it))} ${perText(it)}</div></div>
+      <div class="amt"><span class="chip">${t('Renew')}</span></div></li>`;
+  }).join('')}</ul></div>`;
   html += `<p class="honest">${t('Dates repeat by themselves: a bill on the 31st lands on the last day of shorter months.')}</p>`;
   v.innerHTML = html;
   $$('[data-new]', v).forEach(b => b.onclick = () => itemSheet(null, b.dataset.new));
-  $$('.it', v).forEach(r => r.onclick = () => itemSheet(S.items.find(x => x.id === r.dataset.id)));
+  $$('.it[data-id]', v).forEach(r => r.onclick = () => itemSheet(S.items.find(x => x.id === r.dataset.id)));
+  $$('[data-ended]', v).forEach(r => r.onclick = () => renewSheet(S.items.find(x => x.id === r.dataset.ended)));
   $$('[data-act]', v).forEach(b => b.onclick = e => {
     e.stopPropagation();
     const it = S.items.find(x => x.id === b.dataset.id);
-    if (b.dataset.act === 'cancelled') { removeItem(it.id); toast(t('{name} removed', { name: it.name })); }
+    // a cancelled trial runs until the day before it would have turned paid
+    if (b.dataset.act === 'cancelled') { markCancelled(it, isoDay(addDays(fromISO(it.start), -1)), true); toast(t('{name} cancelled', { name: it.name })); }
     else { it.trial = false; upsertItem(it); toast(t('{name} kept', { name: it.name })); }
+  });
+}
+
+// ---- cancelling and renewing a subscription ----
+// until: the last day you've paid for. A trial may end before today; a paid plan runs at least until today.
+function markCancelled(it, until, trial) {
+  it.until = !trial && until < todayISO() ? todayISO() : until;
+  it.cancelled = todayISO();
+  upsertItem(it);
+}
+function cancelSubSheet(it) {
+  const k = nextIn(it);
+  const paidUntil = k != null ? isoDay(addDays(dateIn(k), -1)) : todayISO();
+  openSheet(`<h2>${t('Cancel subscription')}</h2>
+    <p class="lead">${t('Kalendae can’t cancel {name} for you: do that where you pay for it (Google Play, the App Store or the service’s website). Then mark it here, and it stops counting after the last day you’ve paid for.', { name: `<b>${esc(it.name)}</b>` })}</p>
+    <div class="field"><label>${t('Paid until')}</label><input class="input num" id="cuD" type="date" value="${paidUntil < todayISO() ? todayISO() : paidUntil}" min="${todayISO()}"></div>
+    <div class="row2"><button class="btn ghost" id="cuX">${t('Later')}</button><button class="btn danger" id="cuOk">${t('Mark as cancelled')}</button></div>`, body => {
+    $('#cuX', body).onclick = () => itemSheet(it);
+    $('#cuOk', body).onclick = () => {
+      markCancelled(it, $('#cuD', body).value || todayISO());
+      tick(); closeSheet(); toast(t('{name} cancelled', { name: it.name }));
+    };
+  });
+}
+function renewSheet(it) {
+  const d = fromISO(it.until), when = dfmt(d, { day: 'numeric', month: 'short', year: 'numeric' });
+  openSheet(`<h2>${esc(it.name)}</h2>
+    <p class="lead">${hasEnded(it) ? t('Expired {d}', { d: when }) : t('Ends {d}', { d: when })}. ${t('Renew it where you paid for it (Google Play, the App Store or the service’s website), then tell Kalendae when the next payment is.')}</p>
+    <div class="field"><label>${t('Amount')}</label><div style="display:flex;gap:8px;align-items:center"><input class="input money num" id="rnA" inputmode="decimal" value="${it.amount}" style="flex:1"><span class="sub num">${itemCur(it)}</span></div></div>
+    <div class="field"><label>${t('Next payment')}</label><input class="input num" id="rnD" type="date" value="${hasEnded(it) ? todayISO() : isoDay(addDays(d, 1))}"></div>
+    <div class="row2"><button class="btn danger" id="rnDel">${t('Remove')}</button><button class="btn" id="rnOk">${t('Renew')}</button></div>`, body => {
+    $('#rnOk', body).onclick = () => {
+      const before = Object.assign({}, it);
+      const v = parseAmount($('#rnA', body).value);
+      if (v > 0) it.amount = Math.abs(v);
+      it.start = $('#rnD', body).value || todayISO();
+      it.trial = false;
+      delete it.until; delete it.cancelled;
+      notePrice(it, before);
+      upsertItem(it);
+      tick(); closeSheet(); toast(t('{name} renewed', { name: it.name }));
+    };
+    $('#rnDel', body).onclick = async () => {
+      if (await confirmSheet(t('Delete {name}?', { name: it.name }), t('It’s removed from your forecast. Nothing changes in your real account.'), t('Delete'), true)) { removeItem(it.id); toast(t('Deleted')); }
+    };
   });
 }
 
@@ -136,14 +193,51 @@ function itemSheet(existing, kind = 'sub', preset = null, title = null) {
         <div style="display:flex;gap:8px"><input class="input num" id="iAlt" inputmode="decimal" value="${it.alt || ''}" placeholder="${esc(t('Yearly plan, per year'))}">
         <input class="input num" id="iAltM" inputmode="decimal" value="${it.altMonthly || ''}" placeholder="${esc(t('Cheaper tier, a month'))}"></div>
         <p class="sub" style="margin-top:6px">${t('In {c}. Kalendae tells you if switching would save money.', { c: itemCur(it) })}</p></div>
-      ${existing && !isTrialNow(it) ? `<div class="why">${(() => { const vd = subVerdict(it); return `<div class="why-h">${ringSvg(subSignals(it).map(s => s[0] === vd), 44, VERDICT[vd][1])}<b style="color:${VERDICT[vd][1]}">${VERDICT[vd][0]}</b></div>`; })()}
+      ${existing && !isTrialNow(it) && !isCancelled(it) ? `<div class="why">${(() => { const vd = subVerdict(it); return `<div class="why-h">${ringSvg(subSignals(it).map(s => s[0] === vd), 44, VERDICT[vd][1])}<b style="color:${VERDICT[vd][1]}">${VERDICT[vd][0]}</b></div>`; })()}
         ${subSignals(it).map(([v, k, txt]) => `<div><i style="color:${VERDICT[v][1]}">${k}</i><span>${esc(txt)}</span></div>`).join('')}</div>` : ''}` : ''}
+    ${existing && it.varies && it.kind !== 'move' ? actualsHtml() : ''}
     <div class="card" style="margin-top:16px;padding:6px 16px">
       ${it.kind === 'sub' ? `<div class="tog"><div>${t('Free trial now')}<small>${t('The date above is when it turns paid')}</small></div><button class="sw-t ${it.trial ? 'on' : ''}" id="iTrial"></button></div>` : ''}
       ${it.kind !== 'move' ? `<div class="tog"><div>${t('Amount changes')}<small>${t('Like electricity: type an average')}</small></div><button class="sw-t ${it.varies ? 'on' : ''}" id="iVar"></button></div>` : ''}
       ${existing ? `<div class="tog"><div>${t('Paused')}<small>${t('Kept, but left out of the forecast')}</small></div><button class="sw-t ${it.paused ? 'on' : ''}" id="iPause"></button></div>` : ''}
     </div>
+    ${existing && existing.kind === 'sub' ? (isCancelled(existing)
+      ? `<p class="sub" style="margin-top:14px">${t('Ends {d}', { d: dfmt(fromISO(existing.until), { day: 'numeric', month: 'short', year: 'numeric' }) })}</p><button class="btn ghost wide" id="iRenew" style="margin-top:8px">${t('Renew')}</button>`
+      : `<button class="btn ghost wide" id="iCancelSub" style="margin-top:12px">${t('Cancel subscription')}</button>`) : ''}
     <div class="row2">${existing ? `<button class="btn danger" id="iDel">${t('Delete')}</button>` : `<button class="btn ghost" id="iCancel">${t('Cancel')}</button>`}<button class="btn" id="iSave">${t('Save')}</button></div>`;
+  };
+
+  // what a bill that changes really came to: a column per bill, your estimate (dashed) and the real average (solid)
+  let actRange = 12; // months; 0 = everything
+  const actualsHtml = () => {
+    const cur = itemCur(it), list = it.actuals || [];
+    const t0 = day0(), from = actRange ? isoDay(new Date(t0.getFullYear(), t0.getMonth() - actRange, t0.getDate())) : '0000-00-00';
+    const shown = list.filter(x => x.d >= from).slice(-24);
+    const avg = shown.length ? shown.reduce((s, x) => s + x.v, 0) / shown.length : null;
+    const long = d => dfmt(fromISO(d), { day: 'numeric', month: 'short', year: 'numeric' });
+    const bars = shown.map(x => ({ v: conv(x.v, cur), label: dfmt(fromISO(x.d), { month: 'short' }), tip: `${long(x.d)} · ${fmt(x.v, cur)}`,
+      c: x.v > it.amount * 1.15 ? 'var(--warn)' : 'var(--a1)' }));
+    const recent = list.map((x, i) => i).slice(-6).reverse();
+    return `<div class="field"><label>${it.kind === 'bill' ? t('Actual bills') : t('Actual amounts')}</label>
+      ${list.length ? `<div class="card" style="margin-top:0;padding:12px 14px">
+        <div class="chips" id="iActR">${[[6, t('6 months')], [12, t('12 months')], [0, t('Everything')]].map(([m, n]) => `<button class="chip ${m === actRange ? 'on' : ''}" data-m="${m}">${n}</button>`).join('')}</div>
+        ${shown.length ? barChartSvg(bars, [{ v: conv(it.amount, cur), dash: true }, { v: conv(avg, cur), color: 'var(--ink)' }]) : `<p class="sub" style="margin-top:10px">${t('Nothing logged here yet.')}</p>`}
+        <div class="cap" id="iActCap"></div>
+        <div class="fkeys"><span><i class="dash"></i>${t('your estimate')} · ${fmt(it.amount, cur)}</span>${avg != null ? `<span><i style="background:var(--ink)"></i>${t('Your average')} · ${fmt(avg, cur)}</span>` : ''}</div>
+        ${avg != null && shown.length >= 2 && Math.abs(avg - it.amount) >= 0.5 ? `<button class="btn ghost wide" id="iActUse" style="margin-top:10px;padding:9px 12px;font-size:13px">${t('Use your average as the estimate')}</button>` : ''}
+        <ul class="list" style="margin-top:8px">${recent.map(i => { const x = list[i], d = fromISO(x.d); return `<li><div class="when">${dfmt(d, { month: 'short' })}<b>${d.getDate()}</b></div>
+          <div class="sub">${d.getFullYear()}</div><div class="amt num">${fmt(x.v, cur)} <button class="chip" data-del="${i}" aria-label="${esc(t('Remove'))}" style="padding:2px 9px;margin-inline-start:6px">×</button></div></li>`; }).join('')}</ul></div>` : ''}
+      <div style="display:flex;gap:8px;margin-top:8px"><input class="input num" id="iActD" type="date" value="${todayISO()}" max="${todayISO()}" style="flex:1.2;min-width:0">
+        <input class="input num" id="iActV" inputmode="decimal" placeholder="${esc(t('Amount'))}" style="flex:1;min-width:0"><button class="btn" id="iActAdd" style="padding:10px 14px">${t('Add')}</button></div>
+      <p class="sub" style="margin-top:6px">${t('Type what each bill really came to. The forecast then uses last year’s bill from the same time of year, so winter heating isn’t planned at the summer price. Your balance still comes from check-ins.')}</p></div>`;
+  };
+  // the bill history is saved straight away, without the Save button
+  const saveActuals = withAmount => {
+    const live = S.items.find(x => x.id === it.id);
+    if (!live) return;
+    live.actuals = (it.actuals || []).slice();
+    if (withAmount) live.amount = it.amount;
+    save();
   };
 
   const keep = body => { // remember typed values before redrawing
@@ -200,6 +294,29 @@ function itemSheet(existing, kind = 'sub', preset = null, title = null) {
     });
     const tog = (id, key) => { const el = $(id, body); if (el) el.onclick = () => { keep(body); it[key] = !it[key]; redraw(); }; };
     tog('#iTrial', 'trial'); tog('#iVar', 'varies'); tog('#iPause', 'paused');
+    // bill history
+    $$('#iActR [data-m]', body).forEach(b => b.onclick = () => { keep(body); actRange = +b.dataset.m; redraw(); });
+    const actAdd = $('#iActAdd', body);
+    if (actAdd) actAdd.onclick = () => {
+      keep(body);
+      const v = parseAmount($('#iActV', body).value), d = $('#iActD', body).value;
+      if (!(v > 0) || !d) { toast(t('Type the amount')); return; }
+      it.actuals = (it.actuals || []).concat([{ d, v: Math.abs(v) }]).sort((x, y) => x.d.localeCompare(y.d)).slice(-60);
+      saveActuals(); tick('8'); redraw();
+    };
+    $$('[data-del]', body).forEach(b => b.onclick = () => { keep(body); it.actuals.splice(+b.dataset.del, 1); saveActuals(); redraw(); });
+    const actUse = $('#iActUse', body);
+    if (actUse) actUse.onclick = () => {
+      keep(body);
+      const t0 = day0(), from = actRange ? isoDay(new Date(t0.getFullYear(), t0.getMonth() - actRange, t0.getDate())) : '0000-00-00';
+      const shown = it.actuals.filter(x => x.d >= from).slice(-24);
+      it.amount = Math.round(shown.reduce((s, x) => s + x.v, 0) / shown.length * 100) / 100;
+      saveActuals(true); tick(); redraw(); toast(t('Saved'));
+    };
+    mountBars(body, '#iActCap');
+    // cancelling a subscription, or bringing a cancelled one back
+    const cancelSub = $('#iCancelSub', body); if (cancelSub) cancelSub.onclick = () => cancelSubSheet(existing);
+    const renew = $('#iRenew', body); if (renew) renew.onclick = () => renewSheet(existing);
     if (!existing && !it.name) setTimeout(() => $('#iName', body).focus(), 350);
 
     $('#iSave', body).onclick = () => {

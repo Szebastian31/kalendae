@@ -265,6 +265,15 @@ nav.tabs button.on svg{color:var(--gold)}
 .rcptBtns{display:flex;flex-wrap:wrap;gap:6px}.rcptBtns .btn{padding:8px 12px;font-size:13px}
 .viewer{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.88);display:grid;place-items:center;padding:20px;cursor:zoom-out}
 .viewer img{max-width:100%;max-height:100%;border-radius:10px}
+
+/* 1.2: swipe a sheet down to close it (a bigger target around the handle), column charts */
+.sheet{overscroll-behavior:contain}
+.grab{position:relative;touch-action:none}
+.grab::before{content:"";position:absolute;inset:-12px -70px -10px}
+.bars{display:block;width:100%;height:auto;margin-top:10px;overflow:visible}
+.bars rect[data-i]{cursor:pointer;transition:opacity .15s}
+.cap{min-height:18px;font-size:12px;color:var(--ink2);margin-top:4px}
+[dir=rtl] .bars{direction:ltr}
 </style>
 </head>
 <body>
@@ -309,6 +318,7 @@ nav.tabs button.on svg{color:var(--gold)}
 <script src="js/spend.js"></script>
 <script src="js/today.js"></script>
 <script src="js/forecast.js"></script>
+<script src="js/charts.js"></script>
 <script src="js/checkin.js"></script>
 <script src="js/notify.js"></script>
 <script src="js/settings.js"></script>
