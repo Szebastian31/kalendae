@@ -70,3 +70,33 @@ if (DEMO) {
   refreshRates().then(changed => { if (changed) renderAll(); });
   if ('serviceWorker' in navigator && !NATIVE && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 }
+
+// Annales, the stamp journal, shows each day's spending on its postmark. In the Android app the page hands
+// the last week's totals and today's safe-to-spend to the shell (window.AnnalesShare), which keeps them on the
+// phone and answers only Annales. In a browser there's no bridge, and none of this runs.
+(function () {
+  if (!window.AnnalesShare) return;
+  const round = v => String(Math.round(v * 100) / 100);
+  function shareWithAnnales() {
+    try {
+      if (typeof S === 'undefined' || !S || (typeof DEMO !== 'undefined' && DEMO) || !liveAccounts().length) return;
+      const list = liveSpends();
+      const safe = safeToSpend();
+      for (let i = 0; i < 7; i++) {
+        const d = isoDay(addDays(day0(), -i));
+        const spent = list.filter(sp => sp.d === d).reduce((s, sp) => s + conv(sp.amt, accountById(sp.acct).cur), 0);
+        const o = { 'money.spent': fmt(spent), 'money.spentN': round(spent) };
+        // safe-to-spend is only known for today; earlier days keep what they had on the day
+        if (i === 0 && safe) {
+          const perDay = safe.safe > 0 ? safe.perDay || 0 : 0;
+          o['money.safe'] = fmt(perDay);
+          o['money.safeN'] = round(perDay);
+        }
+        AnnalesShare.put(d, JSON.stringify(o));
+      }
+    } catch (e) {}
+  }
+  setTimeout(shareWithAnnales, 2000);
+  setInterval(shareWithAnnales, 60000);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) shareWithAnnales(); });
+})();

@@ -182,6 +182,7 @@ public class MainActivity extends Activity {
             }
         });
         web.addJavascriptInterface(new Bridge(), "KalendaeNative");
+        web.addJavascriptInterface(new AnnalesShare(this), "AnnalesShare"); // the day summary Annales reads
         // Android 16 no longer calls onBackPressed for apps targeting it; back arrives here instead
         if (Build.VERSION.SDK_INT >= 33) try {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::goBack);
