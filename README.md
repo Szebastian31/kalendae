@@ -74,9 +74,13 @@ Kalendae is a forecast, not a bank statement. It only knows what you tell it: th
 
 Everything stays on your phone. Your accounts, amounts, dates and receipt photos are saved on your device only and never uploaded. The only things Kalendae downloads are public exchange rates from the National Bank of Poland, Frankfurter and currency-api. Backups are files you save yourself (receipt photos included), optionally locked with a password (AES-256).
 
+## License
+
+Released under the [MIT License](LICENSE).
+
 ---
 
-_Kalendae is Latin for the first day of the Roman month, first set by the new moon, when debts fell due. The moneylender's ledger was a calendarium, which is where "calendar" comes from. It's a sibling to Consensus Weather, Fidelis, Vestis, Caelum, Hora and Augur._
+_Kalendae is Latin for the first day of the Roman month, first set by the new moon, when debts fell due. The moneylender's ledger was a calendarium, which is where "calendar" comes from. It's a sibling to Hora, Consensus Weather, Augur, Annales, Caelum and Fidelis, all one tap away in [Hub](https://github.com/Szebastian31/hub)._
 
 
 <details>
@@ -91,9 +95,11 @@ The interface is plain HTML, CSS and JavaScript, hosted on GitHub Pages. The And
 | `js/i18n.js`, `js/i18n/` | Languages: `t('English text')` in the code, one file per language mapping each text to its translation |
 | `icons/` | The icon (`icon.js` draws it, `icon.svg`), the PNGs, and `export.html`, which makes the PNGs |
 | `manifest.webmanifest`, `sw.js` | Home-screen install and offline cache |
-| `android/` | Android app: WebView shell, daily notifications, backups and receipt photos, launcher icon, translated notification channel names, and the signing key |
+| `android/` | Android app: WebView shell, daily notifications, backups and receipt photos, launcher icon, translated notification channel names |
 | `tools/screenshots.sh` | Makes everything in `screenshots/` from the real app with sample data |
 | `.github/workflows/build.yml` | Builds the APK and publishes it as a release |
+
+**Signing.** Builds are signed with the family key. It never lives in git: GitHub builds read it from the `FAMILY_*` secrets, local builds from `~/.gradle/gradle.properties`. Every build installs over the last one.
 
 After changing any file, bump `VERSION` in `sw.js` so installed web copies update, and `versionName` + `versionCode` in `android/app/build.gradle` for a new APK release. Every `.js` file in `js/` is bundled into the APK automatically; a new one also needs a `<script>` line in `index.html` and an entry in `sw.js`.
 
