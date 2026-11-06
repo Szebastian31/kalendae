@@ -55,6 +55,8 @@ No app store, no account, no bank login, no ads. Everything stays on your phone.
 
 Updating: download the new APK and install it over the old one. Your data stays.
 
+**Or get updates automatically with Obtainium:** [Add Kalendae to Obtainium](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22com.kalendae.money%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2FSzebastian31%2Fkalendae%22%2C%22author%22%3A%22Szebastian31%22%2C%22name%22%3A%22Kalendae%22%7D)
+
 ### iPhone or any browser
 
 1. Open **[szebastian31.github.io/kalendae](https://szebastian31.github.io/kalendae/)**.
